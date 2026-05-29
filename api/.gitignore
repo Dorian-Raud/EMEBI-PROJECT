@@ -1,0 +1,10 @@
+/node_modules
+/prisma/generated
+/generated/prisma
+/prisma/generated/
+.env
+.env.docker
+.DS_Store
+/dist
+/build
+/../generated/prisma

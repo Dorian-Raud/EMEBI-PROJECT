@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+// Configuration de base
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- RÉFÉRENTIELS ---
+
+model Country {
+  code      String   @id @unique // ex: BE, FR, DE
+  name      String
+  partners  Partner[]
+  linesOrig InvoiceLine[] @relation("CountryOrigin")
+  linesProv InvoiceLine[] @relation("CountryProv")
+}
+
+model Department {
+  code     String    @id @unique // ex: 01, 33, 974
+  name     String
+  partners Partner[]
+  lines    InvoiceLine[]
+  headers  InvoiceHeader[]
+}
+
+model Nomenclature {
+  id          String   @id @default(uuid())
+  code        String   // SH8 ex: 85171300
+  label       String   @db.Text
+  year        Int      // Pour les MAJ annuelles
+  lines       InvoiceLine[]
+  history     ProductHistory[]
+
+  @@unique([code, year])
+}
+
+// --- STRUCTURE CLIENTS (Multi-Sociétés) ---
+
+model Company {
+  id            String   @id @default(uuid())
+  name          String
+  siret         String   @unique
+  vatNumber     String   @unique
+  declarations  Declaration[]
+  partners      Partner[]
+}
+
+model Partner {
+  id              String   @id @default(uuid())
+  name            String
+  vatNumber       String   // TVA Intracom
+  isoCode         String   
+  country         Country  @relation(fields: [isoCode], references: [code])
+  deptCode        String?
+  department      Department? @relation(fields: [deptCode], references: [code])
+  
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  
+  headers         InvoiceHeader[]
+  history         ProductHistory[]
+
+  @@unique([vatNumber, companyId]) // Un tiers est unique pour un client donné
+}
+
+// --- MOUVEMENTS (EMEBI / DEB) ---
+
+enum Flow {
+  INTRODUCTION
+  EXPEDITION
+}
+
+model Declaration {
+  id          String   @id @default(uuid())
+  month       Int      
+  year        Int
+  flow        Flow
+  status      String   @default("DRAFT") // DRAFT, VALIDATED, EXPORTED
+  
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  
+  headers     InvoiceHeader[]
+}
+
+model InvoiceHeader {
+  id                String    @id @default(uuid())
+  invoiceNumber     String?
+  invoiceDate       DateTime? 
+  regime            String    
+  transactionNature String    
+  transportMode     String?   
+  deptCode          String
+  department        Department @relation(fields: [deptCode], references: [code])
+  
+  partnerId         String
+  partner           Partner   @relation(fields: [partnerId], references: [id])
+  
+  declarationId     String
+  declaration       Declaration @relation(fields: [declarationId], references: [id])
+  
+  lines             InvoiceLine[]
+}
+
+model InvoiceLine {
+  id                String   @id @default(uuid())
+  lineNumber        Int
+
+  deptCode    String?
+  department  Department? @relation(fields: [deptCode], references: [code])
+  
+  mass              Float    
+  supplementaryUnit Float?   
+  value             Float    
+  
+  // Géographie (pré-remplis via Partner mais éditables)
+  originCountryCode String
+  originCountry     Country  @relation("CountryOrigin", fields: [originCountryCode], references: [code])
+  
+  provCountryCode   String
+  provCountry       Country  @relation("CountryProv", fields: [provCountryCode], references: [code])
+  
+
+  // Nomenclature
+  nomenclatureId    String
+  nomenclature      Nomenclature @relation(fields: [nomenclatureId], references: [id])
+  
+  headerId          String
+  header            InvoiceHeader @relation(fields: [headerId], references: [id])
+}
+
+// --- MÉMOIRE / IA ---
+
+model ProductHistory {
+  id             String   @id @default(uuid())
+  productLabel   String   
+  
+  partnerId      String
+  partner        Partner  @relation(fields: [partnerId], references: [id])
+  
+  nomenclatureId String
+  nomenclature   Nomenclature @relation(fields: [nomenclatureId], references: [id])
+
+  lastUsed       DateTime @default(now())
+
+  @@unique([partnerId, productLabel])
+}

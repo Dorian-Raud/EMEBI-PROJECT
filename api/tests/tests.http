@@ -1,0 +1,16 @@
+@apiBaseUrl = http://localhost:3000/api/companies
+
+### Créer une nouvelle entreprise
+POST {{apiBaseUrl}}/
+Content-Type: application/json
+
+{
+  "name": "Ma Super Entreprise",
+  "siret": "12345678901234",
+  "vatNumber": "FR12345678901"
+};
+
+### Récupérer toutes les entreprises 
+
+GET {{apiBaseUrl}}/
+Content-Type: application/json

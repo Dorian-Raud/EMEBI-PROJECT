@@ -1,0 +1,56 @@
+.DeclarationsPage {
+  padding: 24px;
+  text-align: left;
+}
+
+.DeclarationsHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.DeclarationsTitle {
+  margin-bottom: 12px;
+}
+
+.DeclarationsHint {
+  margin-bottom: 24px;
+}
+
+.DeclarationsTopLink {
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text-h);
+  background: var(--bg);
+  white-space: nowrap;
+}
+
+.DeclarationsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.DeclarationsCard {
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  background: var(--bg);
+}
+
+.DeclarationsCardTitle {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 900px) {
+  .DeclarationsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+

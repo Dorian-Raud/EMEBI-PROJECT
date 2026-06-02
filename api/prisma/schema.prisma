@@ -56,7 +56,7 @@ model Company {
 model Partner {
   id              String   @id @default(uuid())
   name            String
-  vatNumber       String   // TVA Intracom
+  vatNumber       String   @unique   // TVA Intracom
   isoCode         String   
   country         Country  @relation(fields: [isoCode], references: [code])
   deptCode        String?
@@ -93,7 +93,7 @@ model Declaration {
 
 model InvoiceHeader {
   id                String    @id @default(uuid())
-  invoiceNumber     String?
+  invoiceNumber     String 
   invoiceDate       DateTime? 
   regime            String    
   transactionNature String    

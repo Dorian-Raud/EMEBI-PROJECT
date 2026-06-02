@@ -1,0 +1,82 @@
+.AppLayout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.AppLayoutHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.AppLayoutBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.AppLayoutHomeLink {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.AppLayoutClient {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.AppLayoutNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  flex: 1;
+}
+
+.AppLayoutNavLink {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.AppLayoutNavLink:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.AppLayoutNavLink.active {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.AppLayoutActions {
+  margin-left: auto;
+}
+
+.AppLayoutActionLink {
+  font-size: 0.9rem;
+  color: #0369a1;
+  text-decoration: none;
+}
+
+.AppLayoutActionLink:hover {
+  text-decoration: underline;
+}
+
+.AppLayoutMain {
+  flex: 1;
+  padding: 1.25rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}

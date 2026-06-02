@@ -1,0 +1,94 @@
+.SelectClientPage {
+  padding: 24px;
+  text-align: left;
+}
+
+.SelectClientTitle {
+  margin-bottom: 8px;
+}
+
+.SelectClientHint {
+  margin-bottom: 20px;
+}
+
+.SelectClientPrimaryBtn {
+  border-radius: 10px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  padding: 10px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.SelectClientPrimaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.SelectClientError {
+  margin-top: 12px;
+  color: #ff3b30;
+  font-size: 14px;
+}
+
+.SelectClientPanel {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.SelectClientFormGrid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.SelectClientInput {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+}
+
+.SelectClientList {
+  margin-top: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.SelectClientCard {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.SelectClientCard:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.SelectClientCardTitle {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.SelectClientCardMeta {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.SelectClientEmpty {
+  font-size: 14px;
+  opacity: 0.9;
+}

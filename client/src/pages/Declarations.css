@@ -10,6 +10,26 @@
   gap: 12px;
 }
 
+.DeclarationsHeaderActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.DeclarationsTopBtn {
+  cursor: pointer;
+  font: inherit;
+}
+
+.DeclarationsClientBanner {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent-bg);
+  font-size: 14px;
+}
+
 .DeclarationsTitle {
   margin-bottom: 12px;
 }

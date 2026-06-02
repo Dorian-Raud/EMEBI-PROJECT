@@ -9,6 +9,7 @@ async function main() {
 
   // 1. Insertion des Pays (UE principale + FR/BE/DE...)
   const countries = [
+    { code: 'FR', name: 'France' },
     { code: 'AT', name: 'Autriche' },
     { code: 'BE', name: 'Belgique' },
     { code: 'BG', name: 'Bulgarie' },

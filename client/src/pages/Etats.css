@@ -1,0 +1,85 @@
+.EtatsPage {
+  max-width: 100%;
+}
+
+.EtatsTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.EtatsSubtitle {
+  margin: 0 0 1rem;
+  color: #475569;
+}
+
+.EtatsFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.EtatsInput {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.EtatsSelect {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.EtatsSearchBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #0284c7;
+  color: #fff;
+  cursor: pointer;
+}
+
+.EtatsSearchBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.EtatsError {
+  color: #b91c1c;
+}
+
+.EtatsEmpty {
+  color: #64748b;
+}
+
+.EtatsTableWrap {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.EtatsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.EtatsTable th,
+.EtatsTable td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.EtatsTable th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.EtatsMuted {
+  color: #94a3b8;
+  font-size: 0.85em;
+}

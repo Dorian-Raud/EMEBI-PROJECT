@@ -1,108 +1,127 @@
 import { useEffect, useState } from 'react'
-import { companiesRequester, type Company } from '../lib/api/requester'
 import { Link } from 'react-router-dom'
+import { partnersRequester, type Partner } from '../lib/api/requester'
+import { useClient } from '../context/ClientContext'
 import './Tiers.css'
 
+function deriveCountryCodeFromVat(vat: string) {
+  const v = vat.trim().toUpperCase()
+  const match = v.match(/^([A-Z]{2})/)
+  return match ? match[1] : ''
+}
+
 export default function Tiers() {
-  const [companies, setCompanies] = useState<Company[]>([])
+  const { selectedCompany } = useClient()
+  const companyId = selectedCompany?.id ?? ''
+
+  const [partners, setPartners] = useState<Partner[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', siret: '', vatNumber: '' })
+  const [form, setForm] = useState({ name: '', vatNumber: '', isoCode: '' })
+  const [error, setError] = useState<string | null>(null)
+
+  const loadPartners = async () => {
+    const res = await partnersRequester.getAll(companyId)
+    if (res.ok && res.data) setPartners(res.data)
+  }
 
   useEffect(() => {
-    const fetchCompanies = async () => {
-      const res = await companiesRequester.getAll()
-      if (res.ok && res.data) setCompanies(res.data)
-    }
-    fetchCompanies()
-  }, [])
+    loadPartners()
+  }, [companyId])
 
   const handleCreate = async () => {
-    const res = await companiesRequester.create(form)
-    if (res.ok && res.data) {
-      setCompanies((prev) => [...prev, res.data])
-      setForm({ name: '', siret: '', vatNumber: '' })
-      setShowForm(false)
-    } else {
+    setError(null)
+    const res = await partnersRequester.create({
+      name: form.name.trim(),
+      vatNumber: form.vatNumber.trim(),
+      isoCode: form.isoCode.trim().toUpperCase(),
+      companyId,
+    })
+    if (!res.ok) {
       // eslint-disable-next-line no-console
-      console.error(res.message)
+      console.error('Erreur création tiers:', res)
+      setError('Impossible de créer le tiers.')
+      return
+    }
+    if (res.data) {
+      setPartners((prev) => [res.data, ...prev])
+      setForm({ name: '', vatNumber: '', isoCode: '' })
+      setShowForm(false)
     }
   }
+
+  if (!selectedCompany) return null
 
   return (
     <div className="TiersPage">
       <div className="TiersHeader">
         <h1 className="TiersTitle">Tiers</h1>
-        <Link to="/" className="TiersBackLink">
+        <Link to="/client" className="TiersBackLink">
           Retour
         </Link>
       </div>
 
-      <p className="TiersHint">Gestion des sociétés (prémices).</p>
+      <p className="TiersHint">
+        Tiers du client <b>{selectedCompany.name}</b> (TVA {selectedCompany.vatNumber}).
+      </p>
 
-      <button
-        type="button"
-        onClick={() => setShowForm((v) => !v)}
-        className="TiersPrimaryBtn"
-      >
-        Ajoutez une société
+      <button type="button" onClick={() => setShowForm((v) => !v)} className="TiersPrimaryBtn">
+        {showForm ? 'Annuler' : 'Ajouter un tiers'}
       </button>
+
+      {error ? <p className="TiersError">{error}</p> : null}
 
       {showForm ? (
         <div className="TiersPanel">
           <div className="TiersFormGrid">
             <input
               className="TiersInput"
-              placeholder="Nom"
+              placeholder="Nom *"
               value={form.name}
-              onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
             />
             <input
               className="TiersInput"
-              placeholder="SIRET"
-              value={form.siret}
-              onChange={(e) => setForm((prev) => ({ ...prev, siret: e.target.value }))}
-            />
-            <input
-              className="TiersInput"
-              placeholder="N° TVA"
+              placeholder="N° TVA *"
               value={form.vatNumber}
-              onChange={(e) => setForm((prev) => ({ ...prev, vatNumber: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  vatNumber: e.target.value,
+                  isoCode: p.isoCode || deriveCountryCodeFromVat(e.target.value),
+                }))
+              }
+            />
+            <input
+              className="TiersInput"
+              placeholder="Pays ISO *"
+              value={form.isoCode}
+              onChange={(e) => setForm((p) => ({ ...p, isoCode: e.target.value.toUpperCase() }))}
             />
           </div>
-
           <div className="TiersActions">
             <button
               type="button"
               onClick={handleCreate}
               className="TiersPrimaryBtn"
+              disabled={!form.name.trim() || !form.vatNumber.trim() || !form.isoCode.trim()}
             >
               Créer
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="TiersSecondaryBtn"
-            >
-              Annuler
             </button>
           </div>
         </div>
       ) : null}
 
       <div className="TiersList">
-        {companies.map((company) => (
-          <div
-            key={company.id}
-            className="TiersCard"
-          >
-            <div className="TiersCardTitle">{company.name}</div>
+        {partners.map((p) => (
+          <div key={p.id} className="TiersCard">
+            <div className="TiersCardTitle">{p.name}</div>
             <div className="TiersCardMeta">
-              SIRET: {company.siret} — TVA: {company.vatNumber}
+              TVA {p.vatNumber} — Pays {p.isoCode}
             </div>
           </div>
         ))}
+        {!partners.length && !showForm ? <p className="TiersEmpty">Aucun tiers pour ce client.</p> : null}
       </div>
     </div>
   )
 }
-

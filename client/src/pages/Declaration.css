@@ -1,6 +1,9 @@
 .DeclarationPage {
   padding: 24px;
   text-align: left;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .DeclarationTop {
@@ -12,6 +15,11 @@
 
 .DeclarationTitle {
   margin-bottom: 8px;
+}
+
+.DeclarationSaveError {
+  color: #b91c1c;
+  margin: 0.5rem 0 0;
 }
 
 .DeclarationBackLink {
@@ -29,6 +37,9 @@
   border-radius: 12px;
   padding: 16px;
   background: var(--bg);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .DeclarationPanelTitle {
@@ -57,6 +68,9 @@
 
 .FormInput {
   height: 42px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
   border: 1px solid var(--border);
   padding: 0 12px;
@@ -83,6 +97,10 @@
   margin-top: 16px;
 }
 
+.DeclarationActionsEnd {
+  justify-content: flex-end;
+}
+
 .BtnPrimary:disabled,
 .BtnSecondary:disabled {
   opacity: 0.55;
@@ -106,10 +124,113 @@
   gap: 8px;
 }
 
-.LineRow {
+.LineEntryScroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.LineEntryGrid {
+  display: grid;
+  grid-template-columns:
+    minmax(10rem, 2fr)
+    minmax(4.5rem, 0.75fr)
+    minmax(4.5rem, 0.75fr)
+    minmax(4.25rem, 0.7fr)
+    minmax(4.5rem, 0.75fr)
+    minmax(5rem, 0.85fr)
+    minmax(6.5rem, auto);
+  column-gap: 14px;
+  row-gap: 8px;
+  align-items: end;
+  width: max(100%, 52rem);
+  box-sizing: border-box;
+}
+
+.LineEntryGridInRow {
+  width: max(100%, 52rem);
+}
+
+.LineFieldCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.LineFieldLabel {
+  color: var(--text-h);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.25;
+  min-height: 2.6em;
+  display: flex;
+  align-items: flex-end;
+}
+
+.LineFieldLabelInvisible {
+  visibility: hidden;
+}
+
+.LineFieldCol .FormInput {
+  min-width: 0;
+}
+
+.LineFieldColCtry .FormInput {
+  text-transform: uppercase;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.LineFieldColAction {
+  align-self: end;
+  flex-shrink: 0;
+}
+
+.LineAddBtn {
+  white-space: nowrap;
+  width: 100%;
+  min-width: 5.5rem;
+  box-sizing: border-box;
+}
+
+.TiersHintError {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #ff3b30;
+}
+
+.LineRowFull {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.LineRowFullDisplay {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.LineRowDisplay {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.LineRowBtns {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
 }
 
 .LineRowMain {
@@ -125,6 +246,136 @@
   margin-top: 12px;
   font-size: 14px;
   opacity: 0.9;
+}
+
+.TiersBox {
+  position: relative;
+}
+
+.TiersInputRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.IconBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.TiersSuggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.TiersSuggestion {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.TiersSuggestion:hover {
+  background: var(--accent-bg);
+}
+
+.TiersSuggestionTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.TiersSuggestionVat {
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.TiersSuggestionIso {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.TiersSuggestionName {
+  margin-top: 2px;
+  font-size: 14px;
+}
+
+.TiersSuggestionEmpty {
+  padding: 12px;
+  font-size: 14px;
+}
+
+.ModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.Modal {
+  width: min(640px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.ModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ModalTitle {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.ModalBody {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.ModalFooter {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.ModalError {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  background: rgba(255, 59, 48, 0.1);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
 }
 
 .BtnPrimary {
@@ -150,6 +401,11 @@
 @media (max-width: 900px) {
   .DeclarationFormGrid {
     grid-template-columns: 1fr;
+  }
+
+  .LineEntryGrid,
+  .LineEntryGridInRow {
+    width: max(100%, 44rem);
   }
 }
 

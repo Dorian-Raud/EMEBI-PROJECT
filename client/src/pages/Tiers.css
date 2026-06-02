@@ -27,6 +27,17 @@
   margin-bottom: 16px;
 }
 
+.TiersError {
+  margin-top: 12px;
+  color: #ff3b30;
+  font-size: 14px;
+}
+
+.TiersEmpty {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
 .TiersPrimaryBtn {
   border-radius: 10px;
   border: 1px solid var(--accent-border);

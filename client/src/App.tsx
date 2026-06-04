@@ -8,6 +8,7 @@ import Declarations from './pages/Declarations'
 import Declaration from './pages/Declaration'
 import Etats from './pages/Etats'
 import Tiers from './pages/Tiers'
+import DeclarationsList from './pages/DeclarationsList'
 
 function RedirectDeclaration() {
   const { type } = useParams()
@@ -29,10 +30,14 @@ export default function App() {
             {/* États flow: pick client (no create) then view */}
             <Route path="/etats" element={<SelectClient nextPath="/etats/view" showCreate={false} />} />
 
+            {/* Déclarations clients flow: pick client (no create) then view */}
+            <Route path="/declarations-clients" element={<SelectClient nextPath="/declarations-clients/view" showCreate={false} />} />
+
             <Route element={<RequireClient />}>
               <Route path="/saisie/declarations" element={<Declarations />} />
               <Route path="/saisie/declaration/:type" element={<Declaration />} />
               <Route path="/etats/view" element={<Etats />} />
+              <Route path="/declarations-clients/view" element={<DeclarationsList />} />
               <Route path="/gestion/tiers" element={<Tiers />} />
             </Route>
           </Route>

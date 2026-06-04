@@ -10,7 +10,6 @@ export type InvoiceLineInput = {
   value: number;
   originCountryCode: string;
   provCountryCode: string;
-  deptCode?: string;
 };
 
 export type CreateInvoiceInput = {
@@ -93,12 +92,12 @@ export async function listInvoices(args: {
       },
       ...(q
         ? {
-            OR: [
-              { invoiceNumber: { contains: q, mode: "insensitive" } },
-              { partner: { name: { contains: q, mode: "insensitive" } } },
-              { partner: { vatNumber: { contains: q, mode: "insensitive" } } },
-            ],
-          }
+          OR: [
+            { invoiceNumber: { contains: q, mode: "insensitive" } },
+            { partner: { name: { contains: q, mode: "insensitive" } } },
+            { partner: { vatNumber: { contains: q, mode: "insensitive" } } },
+          ],
+        }
         : {}),
     },
     include: {
@@ -139,9 +138,11 @@ export async function createInvoice(input: CreateInvoiceInput) {
   const lineRows = [];
 
   for (const line of input.lines) {
-    await ensureCountry(line.originCountryCode);
-    await ensureCountry(line.provCountryCode);
-    const nomenclature = await ensureNomenclature(line.nomenclatureCode, input.year);
+    const [, , nomenclature] = await Promise.all([
+      ensureCountry(line.originCountryCode),
+      ensureCountry(line.provCountryCode),
+      ensureNomenclature(line.nomenclatureCode, input.year),
+    ]);
     lineRows.push({
       lineNumber: line.lineNumber,
       mass: line.mass,
@@ -149,7 +150,6 @@ export async function createInvoice(input: CreateInvoiceInput) {
       value: line.value,
       originCountryCode: line.originCountryCode.trim().toUpperCase(),
       provCountryCode: line.provCountryCode.trim().toUpperCase(),
-      deptCode: line.deptCode ?? headerDept,
       nomenclatureId: nomenclature.id,
     });
   }
@@ -183,13 +183,14 @@ export async function updateInvoice(invoiceId: string, input: UpdateInvoiceInput
     });
     if (!header) throw Object.assign(new Error("Facture introuvable"), { code: "NOT_FOUND" });
 
+    const declarationYear = header.declaration?.year ?? new Date().getFullYear();
     const headerDept = input.deptCode ?? header.deptCode;
     for (const line of input.lines) {
       await ensureCountry(line.originCountryCode);
       await ensureCountry(line.provCountryCode);
       const nomenclature = await ensureNomenclature(
         line.nomenclatureCode,
-        header.declaration.year,
+        declarationYear,
       );
       await prisma.invoiceLine.create({
         data: {
@@ -200,7 +201,6 @@ export async function updateInvoice(invoiceId: string, input: UpdateInvoiceInput
           value: line.value,
           originCountryCode: line.originCountryCode.trim().toUpperCase(),
           provCountryCode: line.provCountryCode.trim().toUpperCase(),
-          deptCode: line.deptCode ?? headerDept,
           nomenclatureId: nomenclature.id,
         },
       });

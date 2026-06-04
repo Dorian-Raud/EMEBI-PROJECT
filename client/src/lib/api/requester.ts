@@ -68,6 +68,7 @@ export type CreateInvoicePayload = {
   transactionNature: string;
   transportMode?: string | null;
   partnerId: string;
+  deptCode: string;        // ← ajout obligatoire (InvoiceHeader)
   lines: Array<{
     lineNumber: number;
     nomenclatureCode: string;

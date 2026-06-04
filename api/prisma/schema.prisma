@@ -27,7 +27,6 @@ model Department {
   code     String    @id @unique // ex: 01, 33, 974
   name     String
   partners Partner[]
-  lines    InvoiceLine[]
   headers  InvoiceHeader[]
 }
 
@@ -104,8 +103,8 @@ model InvoiceHeader {
   partnerId         String
   partner           Partner   @relation(fields: [partnerId], references: [id])
   
-  declarationId     String
-  declaration       Declaration @relation(fields: [declarationId], references: [id])
+  declarationId     String?
+  declaration       Declaration? @relation(fields: [declarationId], references: [id])
   
   lines             InvoiceLine[]
 }
@@ -114,9 +113,6 @@ model InvoiceLine {
   id                String   @id @default(uuid())
   lineNumber        Int
 
-  deptCode    String?
-  department  Department? @relation(fields: [deptCode], references: [code])
-  
   mass              Float    
   supplementaryUnit Float?   
   value             Float    

@@ -274,7 +274,7 @@ export default function Declaration() {
         <div>
           <h1 className="DeclarationTitle">{title}</h1>
           <p>
-            Client : <b>{selectedCompany.name}</b> — Le formulaire change selon le type de déclaration.
+            Client : <b>{selectedCompany.name}</b>
           </p>
         </div>
       </div>
@@ -473,10 +473,6 @@ export default function Declaration() {
 
           <div className={`DeclarationPanel ${headerValidated ? '' : 'DeclarationPanelDisabled'}`}>
             <h2 className="DeclarationPanelTitle">Lignes de facture</h2>
-            <p className="DeclarationSmallHint">
-              Pays de provenance / origine pré-remplis à partir du tiers ({autoCountryCode || '—'}).
-            </p>
-
             <div className="LineEntryScroll">
               <div className="LineEntryGrid">
                 <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
@@ -797,7 +793,7 @@ export default function Declaration() {
                           isoCode: p.isoCode || deriveCountryCodeFromVat(e.target.value),
                         }))
                       }
-                      placeholder="Ex: FRXX999999999"
+                      placeholder="Ex: BE0123456789"
                     />
                   </label>
                   <label className="FormField">
@@ -808,7 +804,7 @@ export default function Declaration() {
                       className="FormInput"
                       value={partnerForm.isoCode}
                       onChange={(e) => setPartnerForm((p) => ({ ...p, isoCode: e.target.value.toUpperCase() }))}
-                      placeholder="Ex: FR"
+                      placeholder="Ex: BE"
                     />
                   </label>
                 </div>

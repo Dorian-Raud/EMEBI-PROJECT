@@ -2,8 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { ClientProvider } from './context/ClientContext'
 import RequireClient from './components/RequireClient'
 import AppLayout from './components/AppLayout'
+import Home from './pages/Home'
 import SelectClient from './pages/SelectClient'
-import ClientHome from './pages/ClientHome'
 import Declarations from './pages/Declarations'
 import Declaration from './pages/Declaration'
 import Etats from './pages/Etats'
@@ -11,7 +11,7 @@ import Tiers from './pages/Tiers'
 
 function RedirectDeclaration() {
   const { type } = useParams()
-  return <Navigate to={`/client/declaration/${type ?? 'introduction'}`} replace />
+  return <Navigate to={`/saisie/declaration/${type ?? 'introduction'}`} replace />
 }
 
 export default function App() {
@@ -19,19 +19,30 @@ export default function App() {
     <ClientProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<SelectClient />} />
-          <Route element={<RequireClient />}>
-            <Route element={<AppLayout />}>
-              <Route path="/client" element={<ClientHome />} />
-              <Route path="/client/declarations" element={<Declarations />} />
-              <Route path="/client/declaration/:type" element={<Declaration />} />
-              <Route path="/client/etats" element={<Etats />} />
-              <Route path="/client/tiers" element={<Tiers />} />
+          {/* Home — 4 big tiles */}
+          <Route path="/" element={<Home />} />
+
+          <Route element={<AppLayout />}>
+            {/* Saisie flow: pick client then work */}
+            <Route path="/saisie" element={<SelectClient />} />
+
+            {/* États flow: pick client (no create) then view */}
+            <Route path="/etats" element={<SelectClient nextPath="/etats/view" showCreate={false} />} />
+
+            <Route element={<RequireClient />}>
+              <Route path="/saisie/declarations" element={<Declarations />} />
+              <Route path="/saisie/declaration/:type" element={<Declaration />} />
+              <Route path="/etats/view" element={<Etats />} />
+              <Route path="/gestion/tiers" element={<Tiers />} />
             </Route>
           </Route>
-          <Route path="/declarations" element={<Navigate to="/client/declarations" replace />} />
-          <Route path="/declaration/:type" element={<RedirectDeclaration />} />
-          <Route path="/tiers" element={<Navigate to="/client/tiers" replace />} />
+
+          {/* Legacy redirects */}
+          <Route path="/client" element={<Navigate to="/" replace />} />
+          <Route path="/client/declarations" element={<Navigate to="/saisie" replace />} />
+          <Route path="/client/declaration/:type" element={<RedirectDeclaration />} />
+          <Route path="/client/etats" element={<Navigate to="/etats" replace />} />
+          <Route path="/client/tiers" element={<Navigate to="/gestion/tiers" replace />} />
         </Routes>
       </BrowserRouter>
     </ClientProvider>

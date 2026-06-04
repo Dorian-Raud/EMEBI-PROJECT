@@ -1,42 +1,25 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
-import { useClient } from '../context/ClientContext'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import './AppLayout.css'
 
 export default function AppLayout() {
-  const { selectedCompany, clearCompany } = useClient()
+  const navigate = useNavigate()
 
   return (
     <div className="AppLayout">
       <header className="AppLayoutHeader">
         <div className="AppLayoutBrand">
-          <Link to="/client" className="AppLayoutHomeLink">
+          <Link to="/" className="AppLayoutHomeLink" title="Retour à l'accueil">
             EMEBI
           </Link>
-          {selectedCompany ? (
-            <span className="AppLayoutClient">
-              {selectedCompany.name}
-            </span>
-          ) : null}
+
         </div>
 
-        <nav className="AppLayoutNav" aria-label="Navigation client">
-          <NavLink to="/client" end className="AppLayoutNavLink">
-            Accueil
-          </NavLink>
-          <NavLink to="/client/declarations" className="AppLayoutNavLink">
-            Déclarations
-          </NavLink>
-          <NavLink to="/client/etats" className="AppLayoutNavLink">
-            États
-          </NavLink>
-          <NavLink to="/client/tiers" className="AppLayoutNavLink">
-            Tiers
-          </NavLink>
-        </nav>
-
         <div className="AppLayoutActions">
-          <Link to="/" className="AppLayoutActionLink" onClick={() => clearCompany()}>
-            Changer de client
+          <button type="button" onClick={() => navigate(-1)} className="AppLayoutBackBtn">
+            ← Retour
+          </button>
+          <Link to="/" className="AppLayoutHomeBtn">
+            Accueil
           </Link>
         </div>
       </header>

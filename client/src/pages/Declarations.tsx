@@ -36,12 +36,12 @@ export default function Declarations() {
       ) : null}
 
       <p className="DeclarationsHint">
-        Sélectionne un type de déclaration pour accéder au formulaire correspondant.
+        Sélectionnez un type de déclaration pour accéder au formulaire correspondant.
       </p>
 
       <div className="DeclarationsGrid">
         {options.map((o) => (
-          <Link key={o.key} to={`/client/declaration/${o.key}`} className="DeclarationsCard">
+          <Link key={o.key} to={`/saisie/declaration/${o.key}`} className="DeclarationsCard">
             <h2 className="DeclarationsCardTitle">{o.title}</h2>
             <p>{o.description}</p>
           </Link>

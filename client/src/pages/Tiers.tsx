@@ -55,9 +55,6 @@ export default function Tiers() {
     <div className="TiersPage">
       <div className="TiersHeader">
         <h1 className="TiersTitle">Tiers</h1>
-        <Link to="/client" className="TiersBackLink">
-          Retour
-        </Link>
       </div>
 
       <p className="TiersHint">

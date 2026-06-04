@@ -8,68 +8,88 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem 1.5rem;
   padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: #fff;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .AppLayoutBrand {
   display: flex;
   align-items: baseline;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .AppLayoutHomeLink {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #0f172a;
+  font-weight: 800;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, var(--accent), #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-decoration: none;
+}
+
+.AppLayoutClientInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.AppLayoutSeparator {
+  color: var(--text);
+  opacity: 0.5;
 }
 
 .AppLayoutClient {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-weight: 500;
+  color: var(--text-h);
+  font-size: 0.95rem;
 }
 
-.AppLayoutNav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
-  flex: 1;
+.AppLayoutChangeClientBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: underline;
 }
 
-.AppLayoutNavLink {
-  padding: 0.4rem 0.75rem;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #475569;
-  font-size: 0.9rem;
-}
-
-.AppLayoutNavLink:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.AppLayoutNavLink.active {
-  background: #e0f2fe;
-  color: #0369a1;
-  font-weight: 600;
+.AppLayoutChangeClientBtn:hover {
+  color: var(--accent);
 }
 
 .AppLayoutActions {
-  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.AppLayoutActionLink {
-  font-size: 0.9rem;
-  color: #0369a1;
+.AppLayoutBackBtn,
+.AppLayoutHomeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
   text-decoration: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
-.AppLayoutActionLink:hover {
-  text-decoration: underline;
+.AppLayoutBackBtn:hover,
+.AppLayoutHomeBtn:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent);
 }
 
 .AppLayoutMain {

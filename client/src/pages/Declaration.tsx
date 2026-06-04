@@ -277,9 +277,6 @@ export default function Declaration() {
             Client : <b>{selectedCompany.name}</b> — Le formulaire change selon le type de déclaration.
           </p>
         </div>
-        <Link to="/client/declarations" className="DeclarationBackLink">
-          Retour
-        </Link>
       </div>
 
       {!isSupported ? (
@@ -297,7 +294,6 @@ export default function Declaration() {
                   value={headerDraft.invoiceNumber}
                   onChange={(e) => setHeaderDraft((p) => ({ ...p, invoiceNumber: e.target.value }))}
                   className="FormInput"
-                  placeholder="Ex: FAC-2026-0001"
                   disabled={headerValidated}
                 />
               </Field>
@@ -368,7 +364,6 @@ export default function Declaration() {
                         setShowTiersSuggestions(true)
                       }}
                       className="FormInput"
-                      placeholder="Ex: FRXX999999999"
                       disabled={headerValidated}
                     />
                     <button
@@ -483,91 +478,88 @@ export default function Declaration() {
             </p>
 
             <div className="LineEntryScroll">
-            <div className="LineEntryGrid">
-              <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
-                <input
-                  value={lineDraft.nomenclatureCode}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, nomenclatureCode: e.target.value }))}
-                  className="FormInput"
-                  placeholder="85171300"
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <LineFieldCol label="Provenance" required className="LineFieldColCtry" title="Pays de provenance">
-                <input
-                  value={lineDraft.provCountryCode}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, provCountryCode: e.target.value.toUpperCase() }))}
-                  className="FormInput"
-                  placeholder={autoCountryCode || 'FR'}
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <LineFieldCol label="Origine" required className="LineFieldColCtry" title="Pays d’origine">
-                <input
-                  value={lineDraft.originCountryCode}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, originCountryCode: e.target.value.toUpperCase() }))}
-                  className="FormInput"
-                  placeholder={autoCountryCode || 'FR'}
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <LineFieldCol label="Quantité" className="LineFieldColSmall">
-                <input
-                  value={lineDraft.supplementaryUnit}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, supplementaryUnit: e.target.value }))}
-                  className="FormInput"
-                  placeholder="0"
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <LineFieldCol label="Poids (kg)" required className="LineFieldColSmall">
-                <input
-                  value={lineDraft.mass}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, mass: e.target.value }))}
-                  className="FormInput"
-                  placeholder="0"
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <LineFieldCol label="Valeur (€)" required className="LineFieldColSmall">
-                <input
-                  value={lineDraft.value}
-                  onChange={(e) => setLineDraft((p) => ({ ...p, value: e.target.value }))}
-                  className="FormInput"
-                  placeholder="0"
-                  disabled={!headerValidated}
-                />
-              </LineFieldCol>
-              <div className="LineFieldCol LineFieldColAction">
-                <span className="LineFieldLabel LineFieldLabelInvisible">Action</span>
-                <button
-                  type="button"
-                  className="BtnPrimary LineAddBtn"
-                  disabled={
-                    !headerValidated ||
-                    !lineDraft.nomenclatureCode.trim() ||
-                    !lineDraft.mass.trim() ||
-                    !lineDraft.value.trim() ||
-                    !lineDraft.provCountryCode.trim() ||
-                    !lineDraft.originCountryCode.trim()
-                  }
-                  onClick={() => {
-                    setLines((prev) => [...prev, { ...lineDraft, id: newId() }])
-                    setLineDraft((p) => ({
-                      ...p,
-                      nomenclatureCode: '',
-                      supplementaryUnit: '',
-                      mass: '',
-                      value: '',
-                      provCountryCode: autoCountryCode,
-                      originCountryCode: autoCountryCode,
-                    }))
-                  }}
-                >
-                  Ajouter
-                </button>
+              <div className="LineEntryGrid">
+                <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
+                  <input
+                    value={lineDraft.nomenclatureCode}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, nomenclatureCode: e.target.value }))}
+                    className="FormInput"
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <LineFieldCol label="Provenance" required className="LineFieldColCtry" title="Pays de provenance">
+                  <input
+                    value={lineDraft.provCountryCode}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, provCountryCode: e.target.value.toUpperCase() }))}
+                    className="FormInput"
+                    placeholder={autoCountryCode}
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <LineFieldCol label="Origine" required className="LineFieldColCtry" title="Pays d’origine">
+                  <input
+                    value={lineDraft.originCountryCode}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, originCountryCode: e.target.value.toUpperCase() }))}
+                    className="FormInput"
+                    placeholder={autoCountryCode}
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <LineFieldCol label="Quantité" className="LineFieldColSmall">
+                  <input
+                    value={lineDraft.supplementaryUnit}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, supplementaryUnit: e.target.value }))}
+                    className="FormInput"
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <LineFieldCol label="Poids (kg)" required className="LineFieldColSmall">
+                  <input
+                    value={lineDraft.mass}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, mass: e.target.value }))}
+                    className="FormInput"
+                    placeholder="Min 1kg"
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <LineFieldCol label="Valeur (€)" required className="LineFieldColSmall">
+                  <input
+                    value={lineDraft.value}
+                    onChange={(e) => setLineDraft((p) => ({ ...p, value: e.target.value }))}
+                    className="FormInput"
+                    disabled={!headerValidated}
+                  />
+                </LineFieldCol>
+                <div className="LineFieldCol LineFieldColAction">
+                  <span className="LineFieldLabel LineFieldLabelInvisible">Action</span>
+                  <button
+                    type="button"
+                    className="BtnPrimary LineAddBtn"
+                    disabled={
+                      !headerValidated ||
+                      !lineDraft.nomenclatureCode.trim() ||
+                      !lineDraft.mass.trim() ||
+                      !lineDraft.value.trim() ||
+                      !lineDraft.provCountryCode.trim() ||
+                      !lineDraft.originCountryCode.trim()
+                    }
+                    onClick={() => {
+                      setLines((prev) => [...prev, { ...lineDraft, id: newId() }])
+                      setLineDraft((p) => ({
+                        ...p,
+                        nomenclatureCode: '',
+                        supplementaryUnit: '',
+                        mass: '',
+                        value: '',
+                        provCountryCode: autoCountryCode,
+                        originCountryCode: autoCountryCode,
+                      }))
+                    }}
+                  >
+                    Ajouter
+                  </button>
+                </div>
               </div>
-            </div>
             </div>
 
             {lines.length ? (
@@ -577,62 +569,62 @@ export default function Declaration() {
                     {editLineId === l.id && editDraft ? (
                       <>
                         <div className="LineEntryScroll">
-                        <div className="LineEntryGrid LineEntryGridInRow">
-                          <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
-                            <input
-                              value={editDraft.nomenclatureCode}
-                              onChange={(e) =>
-                                setEditDraft((p) => (p ? { ...p, nomenclatureCode: e.target.value } : p))
-                              }
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                          <LineFieldCol label="Provenance" required className="LineFieldColCtry" title="Pays de provenance">
-                            <input
-                              value={editDraft.provCountryCode}
-                              onChange={(e) =>
-                                setEditDraft((p) =>
-                                  p ? { ...p, provCountryCode: e.target.value.toUpperCase() } : p,
-                                )
-                              }
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                          <LineFieldCol label="Origine" required className="LineFieldColCtry" title="Pays d’origine">
-                            <input
-                              value={editDraft.originCountryCode}
-                              onChange={(e) =>
-                                setEditDraft((p) =>
-                                  p ? { ...p, originCountryCode: e.target.value.toUpperCase() } : p,
-                                )
-                              }
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                          <LineFieldCol label="Quantité" className="LineFieldColSmall">
-                            <input
-                              value={editDraft.supplementaryUnit}
-                              onChange={(e) =>
-                                setEditDraft((p) => (p ? { ...p, supplementaryUnit: e.target.value } : p))
-                              }
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                          <LineFieldCol label="Poids (kg)" required className="LineFieldColSmall">
-                            <input
-                              value={editDraft.mass}
-                              onChange={(e) => setEditDraft((p) => (p ? { ...p, mass: e.target.value } : p))}
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                          <LineFieldCol label="Valeur (€)" required className="LineFieldColSmall">
-                            <input
-                              value={editDraft.value}
-                              onChange={(e) => setEditDraft((p) => (p ? { ...p, value: e.target.value } : p))}
-                              className="FormInput"
-                            />
-                          </LineFieldCol>
-                        </div>
+                          <div className="LineEntryGrid LineEntryGridInRow">
+                            <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
+                              <input
+                                value={editDraft.nomenclatureCode}
+                                onChange={(e) =>
+                                  setEditDraft((p) => (p ? { ...p, nomenclatureCode: e.target.value } : p))
+                                }
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                            <LineFieldCol label="Provenance" required className="LineFieldColCtry" title="Pays de provenance">
+                              <input
+                                value={editDraft.provCountryCode}
+                                onChange={(e) =>
+                                  setEditDraft((p) =>
+                                    p ? { ...p, provCountryCode: e.target.value.toUpperCase() } : p,
+                                  )
+                                }
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                            <LineFieldCol label="Origine" required className="LineFieldColCtry" title="Pays d’origine">
+                              <input
+                                value={editDraft.originCountryCode}
+                                onChange={(e) =>
+                                  setEditDraft((p) =>
+                                    p ? { ...p, originCountryCode: e.target.value.toUpperCase() } : p,
+                                  )
+                                }
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                            <LineFieldCol label="Quantité" className="LineFieldColSmall">
+                              <input
+                                value={editDraft.supplementaryUnit}
+                                onChange={(e) =>
+                                  setEditDraft((p) => (p ? { ...p, supplementaryUnit: e.target.value } : p))
+                                }
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                            <LineFieldCol label="Poids (kg)" required className="LineFieldColSmall">
+                              <input
+                                value={editDraft.mass}
+                                onChange={(e) => setEditDraft((p) => (p ? { ...p, mass: e.target.value } : p))}
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                            <LineFieldCol label="Valeur (€)" required className="LineFieldColSmall">
+                              <input
+                                value={editDraft.value}
+                                onChange={(e) => setEditDraft((p) => (p ? { ...p, value: e.target.value } : p))}
+                                className="FormInput"
+                              />
+                            </LineFieldCol>
+                          </div>
                         </div>
                         <div className="LineRowBtns">
                           <button

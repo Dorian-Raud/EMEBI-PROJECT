@@ -7,18 +7,17 @@ export async function findOrCreateDeclaration(input: {
   year: number;
   flow: Flow;
 }) {
-  const existing = await prisma.declaration.findFirst({
+  return prisma.declaration.upsert({
     where: {
-      companyId: input.companyId,
-      month: input.month,
-      year: input.year,
-      flow: input.flow,
+      companyId_month_year_flow: {  // ← nom de la contrainte unique composite
+        companyId: input.companyId,
+        month: input.month,
+        year: input.year,
+        flow: input.flow,
+      },
     },
-  });
-  if (existing) return existing;
-
-  return prisma.declaration.create({
-    data: {
+    update: {},
+    create: {
       companyId: input.companyId,
       month: input.month,
       year: input.year,

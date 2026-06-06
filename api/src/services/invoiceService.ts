@@ -126,18 +126,24 @@ export async function getInvoiceById(invoiceId: string) {
 
 export async function createInvoice(input: CreateInvoiceInput) {
   try {
+    console.log("1. findOrCreateDeclaration...")
     const declaration = await findOrCreateDeclaration({
       companyId: input.companyId,
       month: input.month,
       year: input.year,
       flow: input.flow,
     });
+    console.log("2. declaration OK:", declaration.id)
 
+    console.log("3. findUnique partner...")
     const partner = await prisma.partner.findUnique({ where: { id: input.partnerId } });
+    console.log("4. partner OK")
+
     const headerDept = input.deptCode ?? partner?.deptCode ?? "75";
     await ensureDepartment(headerDept);
-    const lineRows = [];
+    console.log("5. department OK")
 
+    const lineRows = [];
     for (const line of input.lines) {
       const [, , nomenclature] = await Promise.all([
         ensureCountry(line.originCountryCode),
@@ -154,6 +160,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
         nomenclatureId: nomenclature.id,
       });
     }
+    console.log("6. lineRows OK:", lineRows.length)
 
     const result = await prisma.invoiceHeader.create({
       data: {
@@ -173,10 +180,11 @@ export async function createInvoice(input: CreateInvoiceInput) {
         lines: { include: { nomenclature: true }, orderBy: { lineNumber: "asc" } },
       },
     });
+    console.log("7. invoiceHeader créé OK:", result.id)
+
     return result;
-
-  } catch (error) {
-
+  } catch (error: any) {
+    console.log("=== ERREUR SERVICE ===", error?.code, error?.message)
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       throw Object.assign(
         new Error("Cette facture existe déjà pour ce fournisseur et sur cette période."),

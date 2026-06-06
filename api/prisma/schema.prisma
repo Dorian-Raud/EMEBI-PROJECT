@@ -82,12 +82,14 @@ model Declaration {
   month       Int      
   year        Int
   flow        Flow
-  status      String   @default("DRAFT") // DRAFT, VALIDATED, EXPORTED
+  status      String   @default("DRAFT")
   
   companyId   String
   company     Company  @relation(fields: [companyId], references: [id])
   
   headers     InvoiceHeader[]
+
+  @@unique([companyId, month, year, flow])  // ← ajout
 }
 
 model InvoiceHeader {

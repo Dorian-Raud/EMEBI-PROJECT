@@ -736,7 +736,7 @@ export default function Declaration() {
                     )
                   } else if (res.status === 400) {
                     setSaveError('Certains champs sont manquants ou invalides. Vérifie le formulaire.')
-                  } else {
+                  } else if (res.status === 500) {
                     setSaveError('Enregistrement impossible. Une erreur serveur est survenue, réessaie.')
 
                     return

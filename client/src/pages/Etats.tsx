@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { invoicesRequester, type InvoiceSummary } from '../lib/api/requester'
+import { invoicesRequester } from '../lib/api/requester'
+import type { InvoiceSummary } from '../types'
 import { useClient } from '../context/ClientContext'
 import './Etats.css'
 
@@ -81,36 +82,37 @@ export default function Etats() {
             <thead>
               <tr>
                 <th>N° facture</th>
-                <th>Date</th>
-                <th>Flux</th>
                 <th>Période</th>
+                <th>Flux</th>
                 <th>Tiers</th>
-                <th>Lignes</th>
                 <th>Régime</th>
+                <th>Nature</th>
+                <th>Total HT</th>
               </tr>
             </thead>
-            <tbody>
-              {invoices.map((inv) => (
+            {invoices.map((inv) => {
+              console.log("lines:", inv.lines)
+              return (
                 <tr key={inv.id}>
                   <td>{inv.invoiceNumber}</td>
                   <td>
-                    {inv.invoiceDate
-                      ? new Date(inv.invoiceDate).toLocaleDateString('fr-FR')
-                      : '—'}
-                  </td>
-                  <td>{flowLabels[inv.declaration.flow] ?? inv.declaration.flow}</td>
-                  <td>
                     {String(inv.declaration.month).padStart(2, '0')}/{inv.declaration.year}
                   </td>
+                  <td>{flowLabels[inv.declaration.flow] ?? inv.declaration.flow}</td>
                   <td>
                     {inv.partner.name}
                     <span className="EtatsMuted"> · {inv.partner.vatNumber}</span>
                   </td>
-                  <td>{inv.lines.length}</td>
                   <td>{inv.regime}</td>
+                  <td>{inv.transactionNature}</td>
+                  <td>
+                    {inv.lines
+                      .reduce((sum, l) => sum + Number(l.value), 0)
+                      .toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                  </td>
                 </tr>
-              ))}
-            </tbody>
+              )
+            })}
           </table>
         </div>
       )}

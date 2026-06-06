@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { companiesRequester, type Company } from '../lib/api/requester'
+import { companiesRequester } from '../lib/api/requester'
+import type { Company } from '../types'
 import { useClient } from '../context/ClientContext'
 import './SelectClient.css'
 

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import type { Company } from '../lib/api/requester'
+import type { Company } from '../types'
 
 type ClientContextValue = {
   selectedCompany: Company | null

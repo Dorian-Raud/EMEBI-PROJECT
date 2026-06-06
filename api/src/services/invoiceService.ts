@@ -103,7 +103,7 @@ export async function listInvoices(args: {
     include: {
       partner: { select: { id: true, name: true, vatNumber: true, isoCode: true } },
       declaration: { select: { id: true, flow: true, month: true, year: true, status: true } },
-      lines: { select: { id: true } },
+      lines: { select: { id: true, value: true } },
     },
     orderBy: [{ invoiceDate: "desc" }, { invoiceNumber: "asc" }],
     take: 100,

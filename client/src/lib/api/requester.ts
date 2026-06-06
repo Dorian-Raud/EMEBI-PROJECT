@@ -1,20 +1,6 @@
 import { apiFetch } from "./fetch";
+import type { Company, Partner, InvoiceSummary, CreateInvoicePayload } from "../../types";
 
-export type Company = {
-  id: string;
-  name: string;
-  siret: string;
-  vatNumber: string;
-};
-
-export type Partner = {
-  id: string;
-  name: string;
-  vatNumber: string;
-  isoCode: string;
-  deptCode?: string | null;
-  companyId?: string;
-};
 
 export const companiesRequester = {
   getAll: () => apiFetch<Company[]>("/companies"),
@@ -46,39 +32,7 @@ export const partnersRequester = {
     }),
 };
 
-export type InvoiceSummary = {
-  id: string;
-  invoiceNumber: string;
-  invoiceDate: string | null;
-  regime: string;
-  transactionNature: string;
-  partner: { id: string; name: string; vatNumber: string; isoCode: string };
-  declaration: { id: string; flow: "INTRODUCTION" | "EXPEDITION"; month: number; year: number; status: string };
-  lines: { id: string }[];
-};
 
-export type CreateInvoicePayload = {
-  companyId: string;
-  flow: "INTRODUCTION" | "EXPEDITION";
-  month: number;
-  year: number;
-  invoiceNumber: string;
-  invoiceDate?: string | null;
-  regime: string;
-  transactionNature: string;
-  transportMode?: string | null;
-  partnerId: string;
-  deptCode: string;        // ← ajout obligatoire (InvoiceHeader)
-  lines: Array<{
-    lineNumber: number;
-    nomenclatureCode: string;
-    mass: number;
-    supplementaryUnit?: number | null;
-    value: number;
-    originCountryCode: string;
-    provCountryCode: string;
-  }>;
-};
 
 export const invoicesRequester = {
   getAll: (

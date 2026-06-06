@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { partnersRequester, type Partner } from '../lib/api/requester'
+import { partnersRequester } from '../lib/api/requester'
+import type { Partner } from '../types'
 import { useClient } from '../context/ClientContext'
 import './Tiers.css'
 

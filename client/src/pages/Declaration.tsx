@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './Declaration.css'
-import { invoicesRequester, partnersRequester, type Partner } from '../lib/api/requester'
+import { invoicesRequester, partnersRequester } from '../lib/api/requester'
+import type { Partner } from '../types'
 import { useClient } from '../context/ClientContext'
 
 type DeclarationType = 'fiscale' | 'introduction' | 'expedition'

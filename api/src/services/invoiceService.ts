@@ -1,4 +1,4 @@
-import { prisma } from "../models/index.ts";
+import { prisma, Prisma } from "../models/index.ts";
 import { findOrCreateDeclaration } from "./declarationService.ts";
 import type { Flow } from "../../prisma/generated/client/index.js";
 
@@ -125,53 +125,66 @@ export async function getInvoiceById(invoiceId: string) {
 }
 
 export async function createInvoice(input: CreateInvoiceInput) {
-  const declaration = await findOrCreateDeclaration({
-    companyId: input.companyId,
-    month: input.month,
-    year: input.year,
-    flow: input.flow,
-  });
-
-  const partner = await prisma.partner.findUnique({ where: { id: input.partnerId } });
-  const headerDept = input.deptCode ?? partner?.deptCode ?? "75";
-  await ensureDepartment(headerDept);
-  const lineRows = [];
-
-  for (const line of input.lines) {
-    const [, , nomenclature] = await Promise.all([
-      ensureCountry(line.originCountryCode),
-      ensureCountry(line.provCountryCode),
-      ensureNomenclature(line.nomenclatureCode, input.year),
-    ]);
-    lineRows.push({
-      lineNumber: line.lineNumber,
-      mass: line.mass,
-      supplementaryUnit: line.supplementaryUnit ?? null,
-      value: line.value,
-      originCountryCode: line.originCountryCode.trim().toUpperCase(),
-      provCountryCode: line.provCountryCode.trim().toUpperCase(),
-      nomenclatureId: nomenclature.id,
+  try {
+    const declaration = await findOrCreateDeclaration({
+      companyId: input.companyId,
+      month: input.month,
+      year: input.year,
+      flow: input.flow,
     });
-  }
 
-  return prisma.invoiceHeader.create({
-    data: {
-      invoiceNumber: input.invoiceNumber,
-      invoiceDate: input.invoiceDate ? new Date(input.invoiceDate) : null,
-      regime: input.regime,
-      transactionNature: input.transactionNature,
-      transportMode: input.transportMode ?? null,
-      deptCode: headerDept,
-      partnerId: input.partnerId,
-      declarationId: declaration.id,
-      lines: { create: lineRows },
-    },
-    include: {
-      partner: true,
-      declaration: true,
-      lines: { include: { nomenclature: true }, orderBy: { lineNumber: "asc" } },
-    },
-  });
+    const partner = await prisma.partner.findUnique({ where: { id: input.partnerId } });
+    const headerDept = input.deptCode ?? partner?.deptCode ?? "75";
+    await ensureDepartment(headerDept);
+    const lineRows = [];
+
+    for (const line of input.lines) {
+      const [, , nomenclature] = await Promise.all([
+        ensureCountry(line.originCountryCode),
+        ensureCountry(line.provCountryCode),
+        ensureNomenclature(line.nomenclatureCode, input.year),
+      ]);
+      lineRows.push({
+        lineNumber: line.lineNumber,
+        mass: line.mass,
+        supplementaryUnit: line.supplementaryUnit ?? null,
+        value: line.value,
+        originCountryCode: line.originCountryCode.trim().toUpperCase(),
+        provCountryCode: line.provCountryCode.trim().toUpperCase(),
+        nomenclatureId: nomenclature.id,
+      });
+    }
+
+    const result = await prisma.invoiceHeader.create({
+      data: {
+        invoiceNumber: input.invoiceNumber,
+        invoiceDate: input.invoiceDate ? new Date(input.invoiceDate) : null,
+        regime: input.regime,
+        transactionNature: input.transactionNature,
+        transportMode: input.transportMode ?? null,
+        deptCode: headerDept,
+        partnerId: input.partnerId,
+        declarationId: declaration.id,
+        lines: { create: lineRows },
+      },
+      include: {
+        partner: true,
+        declaration: true,
+        lines: { include: { nomenclature: true }, orderBy: { lineNumber: "asc" } },
+      },
+    });
+    return result;
+
+  } catch (error) {
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw Object.assign(
+        new Error("Cette facture existe déjà pour ce fournisseur et sur cette période."),
+        { code: "DUPLICATE_INVOICE" }
+      );
+    }
+    throw error;
+  }
 }
 
 export async function updateInvoice(invoiceId: string, input: UpdateInvoiceInput) {

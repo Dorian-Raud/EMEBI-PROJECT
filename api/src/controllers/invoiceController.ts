@@ -67,7 +67,14 @@ export async function postInvoice(req: Request, res: Response) {
       lines: body.lines,
     });
     return res.status(201).json(invoice);
-  } catch (err) {
+  } catch (err: any) {
+    console.log("=== ERREUR CATCH CONTROLLER ===")
+    console.log("err.code:", err?.code)
+    console.log("err.message:", err?.message)
+    console.log("err:", err)
+    if (err.code === "DUPLICATE_INVOICE") {
+      return res.status(409).json({ error: err.message });
+    }
     console.error(err);
     return res.status(500).json({ error: "Impossible de créer la facture" });
   }

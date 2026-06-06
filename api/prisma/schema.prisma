@@ -107,6 +107,7 @@ model InvoiceHeader {
   declaration       Declaration? @relation(fields: [declarationId], references: [id])
   
   lines             InvoiceLine[]
+  @@unique([invoiceNumber, partnerId, declarationId])  // ← unicité composite
 }
 
 model InvoiceLine {

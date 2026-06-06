@@ -26,7 +26,7 @@ type InvoiceLineDraft = {
 
 type InvoiceLine = InvoiceLineDraft & { id: string }
 
-const REGIMES_INTRO = [
+const NATURES_INTRO = [
   { value: '11', label: '11 : Achat/vente ferme (excepté commerce direct avec/par des particuliers)' },
   { value: '12', label: '12 : Commerce direct avec/par des particuliers (y compris les ventes à distance)' },
   { value: '21', label: '21 : Retour de biens (hors remplacement)' },
@@ -48,12 +48,9 @@ const REGIMES_INTRO = [
   { value: '99', label: '99 : Autres' },
 ] as const
 
-const NATURES_INTRO = [
+const REGIMES_INTRO = [
   { value: '11', label: '11 : Achat/vente ferme' },
-  { value: '21', label: '21 : Retour de biens' },
-  { value: '31', label: '31 : Mouvements vers/depuis un entrepôt' },
-  { value: '33', label: '33 : Leasing financier (location-vente)' },
-  { value: '99', label: '99 : Autres' },
+  { value: '19', label: '19 : Autres Introductions' },
 ] as const
 
 const TRANSPORT_MODES = [
@@ -732,8 +729,15 @@ export default function Declaration() {
 
                   const res = await invoicesRequester.create(payload)
                   setSaving(false)
-                  if (!res.ok) {
-                    setSaveError('Enregistrement impossible. Vérifie les champs et réessaie.')
+                  if (res.status === 409) {
+                    setSaveError(
+                      `La facture n°${headerDraft.invoiceNumber.trim()} existe déjà pour ce fournisseur sur cette période.`
+                    )
+                  } else if (res.status === 400) {
+                    setSaveError('Certains champs sont manquants ou invalides. Vérifie le formulaire.')
+                  } else {
+                    setSaveError('Enregistrement impossible. Une erreur serveur est survenue, réessaie.')
+
                     return
                   }
                   resetAll()

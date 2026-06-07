@@ -5,6 +5,9 @@ import { invoicesRequester, partnersRequester } from '../lib/api/requester'
 import type { Partner, DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
 import { useClient } from '../context/ClientContext'
 import { NATURES_INTRO, REGIMES_INTRO, TRANSPORT_MODES } from '../constants/declaration'
+import { Field, LineFieldCol } from '../components/FormField'
+import { PartnerModal } from '../components/PartnerModal'
+import { InvoiceLineRow } from '../components/InvoiceLineRow'
 
 function getDeclarationTitle(t: DeclarationType) {
   if (t === 'introduction') return 'Déclaration d’introduction'
@@ -23,48 +26,6 @@ function newId() {
   const c: any = globalThis.crypto
   if (c?.randomUUID) return c.randomUUID() as string
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string
-  required?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <label className="FormField">
-      <span className="FormFieldLabel">
-        {label} {required ? <span className="FormFieldRequired">*</span> : null}
-      </span>
-      {children}
-    </label>
-  )
-}
-
-function LineFieldCol({
-  label,
-  required,
-  className,
-  title,
-  children,
-}: {
-  label: string
-  required?: boolean
-  className?: string
-  title?: string
-  children: React.ReactNode
-}) {
-  return (
-    <label className={`LineFieldCol ${className ?? ''}`} title={title}>
-      <span className="LineFieldLabel">
-        {label} {required ? <span className="FormFieldRequired">*</span> : null}
-      </span>
-      {children}
-    </label>
-  )
 }
 
 export default function Declaration() {
@@ -101,9 +62,6 @@ export default function Declaration() {
     provCountryCode: '',
     originCountryCode: '',
   })
-
-  const [editLineId, setEditLineId] = useState<string | null>(null)
-  const [editDraft, setEditDraft] = useState<InvoiceLineDraft | null>(null)
 
   const [partners, setPartners] = useState<Partner[]>([])
   const [partnersLoaded, setPartnersLoaded] = useState(false)
@@ -501,132 +459,13 @@ export default function Declaration() {
             {lines.length ? (
               <div className="LinesList">
                 {lines.map((l) => (
-                  <div key={l.id} className="LineRowFull">
-                    {editLineId === l.id && editDraft ? (
-                      <>
-                        <div className="LineEntryScroll">
-                          <div className="LineEntryGrid LineEntryGridInRow">
-                            <LineFieldCol label="Nomenclature" required className="LineFieldColNc">
-                              <input
-                                value={editDraft.nomenclatureCode}
-                                onChange={(e) =>
-                                  setEditDraft((p) => (p ? { ...p, nomenclatureCode: e.target.value } : p))
-                                }
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                            <LineFieldCol label="Provenance" required className="LineFieldColCtry" title="Pays de provenance">
-                              <input
-                                value={editDraft.provCountryCode}
-                                onChange={(e) =>
-                                  setEditDraft((p) =>
-                                    p ? { ...p, provCountryCode: e.target.value.toUpperCase() } : p,
-                                  )
-                                }
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                            <LineFieldCol label="Origine" required className="LineFieldColCtry" title="Pays d’origine">
-                              <input
-                                value={editDraft.originCountryCode}
-                                onChange={(e) =>
-                                  setEditDraft((p) =>
-                                    p ? { ...p, originCountryCode: e.target.value.toUpperCase() } : p,
-                                  )
-                                }
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                            <LineFieldCol label="Quantité" className="LineFieldColSmall">
-                              <input
-                                value={editDraft.supplementaryUnit}
-                                onChange={(e) =>
-                                  setEditDraft((p) => (p ? { ...p, supplementaryUnit: e.target.value } : p))
-                                }
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                            <LineFieldCol label="Poids (kg)" required className="LineFieldColSmall">
-                              <input
-                                value={editDraft.mass}
-                                onChange={(e) => setEditDraft((p) => (p ? { ...p, mass: e.target.value } : p))}
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                            <LineFieldCol label="Valeur (€)" required className="LineFieldColSmall">
-                              <input
-                                value={editDraft.value}
-                                onChange={(e) => setEditDraft((p) => (p ? { ...p, value: e.target.value } : p))}
-                                className="FormInput"
-                              />
-                            </LineFieldCol>
-                          </div>
-                        </div>
-                        <div className="LineRowBtns">
-                          <button
-                            type="button"
-                            className="BtnPrimary"
-                            onClick={() => {
-                              const d = editDraft
-                              setLines((prev) => prev.map((x) => (x.id === l.id ? { ...x, ...d } : x)))
-                              setEditLineId(null)
-                              setEditDraft(null)
-                            }}
-                          >
-                            Enregistrer
-                          </button>
-                          <button
-                            type="button"
-                            className="BtnSecondary"
-                            onClick={() => {
-                              setEditLineId(null)
-                              setEditDraft(null)
-                            }}
-                          >
-                            Annuler
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="LineRowFullDisplay">
-                        <div className="LineRowDisplay">
-                          <div className="LineRowMain">
-                            <b>NC</b> {l.nomenclatureCode} · <b>Prov</b> {l.provCountryCode} · <b>Orig</b>{' '}
-                            {l.originCountryCode} · <b>Qté</b> {l.supplementaryUnit || '—'} · <b>Poids</b> {l.mass} ·{' '}
-                            <b>Valeur</b> {l.value}
-                          </div>
-                        </div>
-                        <div className="LineRowBtns">
-                          <button
-                            type="button"
-                            className="BtnSecondary"
-                            disabled={!headerValidated}
-                            onClick={() => {
-                              setEditLineId(l.id)
-                              setEditDraft({
-                                nomenclatureCode: l.nomenclatureCode,
-                                supplementaryUnit: l.supplementaryUnit,
-                                mass: l.mass,
-                                value: l.value,
-                                provCountryCode: l.provCountryCode,
-                                originCountryCode: l.originCountryCode,
-                              })
-                            }}
-                          >
-                            Modifier
-                          </button>
-                          <button
-                            type="button"
-                            className="BtnSecondary"
-                            disabled={!headerValidated}
-                            onClick={() => setLines((prev) => prev.filter((x) => x.id !== l.id))}
-                          >
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <InvoiceLineRow
+                    key={l.id}
+                    line={l}
+                    disabled={!headerValidated}
+                    onSave={(id, draft) => setLines((prev) => prev.map((x) => x.id === id ? { ...x, ...draft } : x))}
+                    onDelete={(id) => setLines((prev) => prev.filter((x) => x.id !== id))}
+                  />
                 ))}
               </div>
             ) : (
@@ -704,105 +543,19 @@ export default function Declaration() {
           </div>
 
           {showPartnerModal ? (
-            <div className="ModalOverlay" role="dialog" aria-modal="true">
-              <div className="Modal">
-                <div className="ModalHeader">
-                  <div className="ModalTitle">Créer un tiers</div>
-                  <button type="button" className="IconBtn" onClick={() => setShowPartnerModal(false)}>
-                    ×
-                  </button>
-                </div>
-
-                {partnerError ? <div className="ModalError">{partnerError}</div> : null}
-
-                <div className="ModalBody">
-                  <p className="DeclarationSmallHint">
-                    Ce tiers sera rattaché au client <b>{selectedCompany.name}</b>.
-                  </p>
-                  <label className="FormField">
-                    <span className="FormFieldLabel">
-                      Nom <span className="FormFieldRequired">*</span>
-                    </span>
-                    <input
-                      className="FormInput"
-                      value={partnerForm.name}
-                      onChange={(e) => setPartnerForm((p) => ({ ...p, name: e.target.value }))}
-                      placeholder="Ex: Client ABC"
-                    />
-                  </label>
-                  <label className="FormField">
-                    <span className="FormFieldLabel">
-                      N° TVA <span className="FormFieldRequired">*</span>
-                    </span>
-                    <input
-                      className="FormInput"
-                      value={partnerForm.vatNumber}
-                      onChange={(e) =>
-                        setPartnerForm((p) => ({
-                          ...p,
-                          vatNumber: e.target.value,
-                          isoCode: p.isoCode || deriveCountryCodeFromVat(e.target.value),
-                        }))
-                      }
-                      placeholder="Ex: BE0123456789"
-                    />
-                  </label>
-                  <label className="FormField">
-                    <span className="FormFieldLabel">
-                      Pays (ISO) <span className="FormFieldRequired">*</span>
-                    </span>
-                    <input
-                      className="FormInput"
-                      value={partnerForm.isoCode}
-                      onChange={(e) => setPartnerForm((p) => ({ ...p, isoCode: e.target.value.toUpperCase() }))}
-                      placeholder="Ex: BE"
-                    />
-                  </label>
-                </div>
-
-                <div className="ModalFooter">
-                  <button type="button" className="BtnSecondary" onClick={() => setShowPartnerModal(false)}>
-                    Annuler
-                  </button>
-                  <button
-                    type="button"
-                    className="BtnPrimary"
-                    disabled={
-                      !partnerForm.name.trim() ||
-                      !partnerForm.vatNumber.trim() ||
-                      !partnerForm.isoCode.trim()
-                    }
-                    onClick={async () => {
-                      setPartnerError(null)
-                      const res = await partnersRequester.create({
-                        name: partnerForm.name.trim(),
-                        vatNumber: partnerForm.vatNumber.trim(),
-                        isoCode: partnerForm.isoCode.trim().toUpperCase(),
-                        companyId,
-                      })
-                      if (!res.ok) {
-                        // On log l'erreur détaillée en console, mais on affiche une erreur générique à l'utilisateur
-                        // eslint-disable-next-line no-console
-                        console.error("Erreur création tiers:", res)
-                        setPartnerError("Impossible de créer le tiers (erreur serveur ou connexion).")
-                        return
-                      }
-                      if (res.data) {
-                        const created = res.data as Partner
-                        setPartners((prev) => [created, ...prev])
-                        setHeaderDraft((prev) => ({ ...prev, tiersVatNumber: created.vatNumber }))
-                        setTiersQuery(created.vatNumber)
-                        setSelectedPartnerId(created.id)
-                      }
-                      setShowPartnerModal(false)
-                      setShowTiersSuggestions(false)
-                    }}
-                  >
-                    Créer
-                  </button>
-                </div>
-              </div>
-            </div>
+            <PartnerModal
+              companyId={companyId}
+              companyName={selectedCompany.name}
+              initialVatNumber={tiersQuery.trim()}
+              onClose={() => setShowPartnerModal(false)}
+              onCreated={(created) => {
+                setPartners((prev) => [created, ...prev])
+                setHeaderDraft((prev) => ({ ...prev, tiersVatNumber: created.vatNumber }))
+                setTiersQuery(created.vatNumber)
+                setSelectedPartnerId(created.id)
+                setShowTiersSuggestions(false)
+              }}
+            />
           ) : null}
         </>
       ) : (

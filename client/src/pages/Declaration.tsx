@@ -314,6 +314,8 @@ export default function Declaration() {
                     nomenclatureCode: '', supplementaryUnit: '', mass: '', value: '',
                     provCountryCode: autoCountryCode, originCountryCode: autoCountryCode,
                   })
+                  setHeaderDraft((p) => ({ ...p, invoiceNumber: '' }))
+                  setHeaderValidated(false)
                 }}
               >
                 Cloner facture

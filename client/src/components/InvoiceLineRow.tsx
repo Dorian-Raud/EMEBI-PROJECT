@@ -96,7 +96,7 @@ export function InvoiceLineRow({ line, disabled, onSave, onDelete }: InvoiceLine
                     <div className="LineRowMain">
                         <b>NC</b> {line.nomenclatureCode} · <b>Prov</b> {line.provCountryCode} · <b>Orig</b>{' '}
                         {line.originCountryCode} · <b>Qté</b> {line.supplementaryUnit || '—'} · <b>Poids</b> {line.mass} ·{' '}
-                        <b>Valeur</b> {line.value}
+                        <b>Valeur</b> {line.value} €
                     </div>
                 </div>
                 <div className="LineRowBtns">

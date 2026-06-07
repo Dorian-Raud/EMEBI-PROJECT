@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import './Declaration.css'
 import { invoicesRequester, partnersRequester } from '../lib/api/requester'
 import type { Partner, DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
@@ -37,6 +37,7 @@ export default function Declaration() {
   const isSupported = type === 'fiscale' || type === 'introduction' || type === 'expedition'
   const title = useMemo(() => (isSupported ? getDeclarationTitle(type) : 'Déclaration'), [isSupported, type])
 
+  // ── Header ──────────────────────────────────────────────────────────────────
   const [headerDraft, setHeaderDraft] = useState<InvoiceHeaderDraft>({
     invoiceNumber: '',
     invoiceDate: '',
@@ -45,7 +46,6 @@ export default function Declaration() {
     tiersVatNumber: '',
     transportMode: '',
   })
-
   const [headerValidated, setHeaderValidated] = useState(false)
 
   const autoCountryCode = useMemo(
@@ -53,6 +53,7 @@ export default function Declaration() {
     [headerDraft.tiersVatNumber],
   )
 
+  // ── Lignes ───────────────────────────────────────────────────────────────────
   const [lines, setLines] = useState<InvoiceLine[]>([])
   const [lineDraft, setLineDraft] = useState<InvoiceLineDraft>({
     nomenclatureCode: '',
@@ -63,20 +64,21 @@ export default function Declaration() {
     originCountryCode: '',
   })
 
+  // ── Tiers ────────────────────────────────────────────────────────────────────
   const [partners, setPartners] = useState<Partner[]>([])
   const [partnersLoaded, setPartnersLoaded] = useState(false)
   const [tiersQuery, setTiersQuery] = useState('')
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null)
   const [showTiersSuggestions, setShowTiersSuggestions] = useState(false)
+  const [showPartnerModal, setShowPartnerModal] = useState(false)
   const tiersBoxRef = useRef<HTMLDivElement | null>(null)
 
-  const [showPartnerModal, setShowPartnerModal] = useState(false)
-  const [partnerForm, setPartnerForm] = useState({ name: '', vatNumber: '', isoCode: '' })
-  const [partnerError, setPartnerError] = useState<string | null>(null)
+  // ── Sauvegarde ───────────────────────────────────────────────────────────────
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  // ── Computed ─────────────────────────────────────────────────────────────────
   const canValidateHeader =
     !!headerDraft.invoiceNumber.trim() &&
     !!headerDraft.regime &&
@@ -92,15 +94,7 @@ export default function Declaration() {
       .slice(0, 8)
   }, [partners, tiersQuery])
 
-  const ensurePartnersLoaded = async () => {
-    if (partnersLoaded) return
-    const res = await partnersRequester.getAll(companyId)
-    if (res.ok && res.data) {
-      setPartners(res.data)
-    }
-    setPartnersLoaded(true)
-  }
-
+  // ── Effects ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     setPartners([])
     setPartnersLoaded(false)
@@ -125,43 +119,28 @@ export default function Declaration() {
     setTiersQuery(headerDraft.tiersVatNumber)
   }, [headerDraft.tiersVatNumber])
 
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+  const ensurePartnersLoaded = async () => {
+    if (partnersLoaded) return
+    const res = await partnersRequester.getAll(companyId)
+    if (res.ok && res.data) setPartners(res.data)
+    setPartnersLoaded(true)
+  }
+
   const resetAll = () => {
     setHeaderValidated(false)
-    setHeaderDraft({
-      invoiceNumber: '',
-      invoiceDate: '',
-      regime: '',
-      natureTransaction: '',
-      tiersVatNumber: '',
-      transportMode: '',
-    })
+    setHeaderDraft({ invoiceNumber: '', invoiceDate: '', regime: '', natureTransaction: '', tiersVatNumber: '', transportMode: '' })
     setLines([])
-    setLineDraft({
-      nomenclatureCode: '',
-      supplementaryUnit: '',
-      mass: '',
-      value: '',
-      provCountryCode: '',
-      originCountryCode: '',
-    })
-    setEditLineId(null)
-    setEditDraft(null)
+    setLineDraft({ nomenclatureCode: '', supplementaryUnit: '', mass: '', value: '', provCountryCode: '', originCountryCode: '' })
     setSelectedPartnerId(null)
     setTiersQuery('')
+    setSaveError(null)
+    setSaveSuccess(null)
   }
 
   const cloneInvoice = () => {
     setLines([])
-    setLineDraft({
-      nomenclatureCode: '',
-      supplementaryUnit: '',
-      mass: '',
-      value: '',
-      provCountryCode: autoCountryCode,
-      originCountryCode: autoCountryCode,
-    })
-    setEditLineId(null)
-    setEditDraft(null)
+    setLineDraft({ nomenclatureCode: '', supplementaryUnit: '', mass: '', value: '', provCountryCode: autoCountryCode, originCountryCode: autoCountryCode })
   }
 
   if (!selectedCompany) return null
@@ -268,17 +247,7 @@ export default function Declaration() {
                       type="button"
                       className="IconBtn"
                       disabled={headerValidated}
-                      onClick={() => {
-                        setPartnerError(null)
-                        const vat = tiersQuery.trim()
-                        const inferred = deriveCountryCodeFromVat(vat)
-                        setPartnerForm({
-                          name: '',
-                          vatNumber: vat,
-                          isoCode: inferred,
-                        })
-                        setShowPartnerModal(true)
-                      }}
+                      onClick={() => setShowPartnerModal(true)}
                       title="Créer un tiers"
                     >
                       +

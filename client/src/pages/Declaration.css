@@ -19,6 +19,11 @@
   margin: 0.5rem 0 0;
 }
 
+.DeclarationSaveSuccess {
+  color: #16a34a;
+  margin: 0.5rem 0 0;
+}
+
 .DeclarationBackLink {
   text-decoration: none;
   border: 1px solid var(--border);

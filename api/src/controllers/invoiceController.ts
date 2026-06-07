@@ -68,14 +68,9 @@ export async function postInvoice(req: Request, res: Response) {
     });
     return res.status(201).json(invoice);
   } catch (err: any) {
-    console.log("=== ERREUR CATCH CONTROLLER ===")
-    console.log("err.code:", err?.code)
-    console.log("err.message:", err?.message)
-    console.log("err:", err)
     if (err.code === "DUPLICATE_INVOICE") {
       return res.status(409).json({ error: err.message });
     }
-    console.error(err);
     return res.status(500).json({ error: "Impossible de créer la facture" });
   }
 }
@@ -87,7 +82,6 @@ export async function putInvoice(req: Request, res: Response) {
   } catch (err: unknown) {
     const code = err && typeof err === "object" && "code" in err ? err.code : null;
     if (code === "NOT_FOUND") return res.status(404).json({ error: "Facture introuvable" });
-    console.error(err);
     return res.status(500).json({ error: "Impossible de mettre à jour la facture" });
   }
 }

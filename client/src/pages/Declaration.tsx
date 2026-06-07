@@ -2,68 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './Declaration.css'
 import { invoicesRequester, partnersRequester } from '../lib/api/requester'
-import type { Partner } from '../types'
+import type { Partner, DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
 import { useClient } from '../context/ClientContext'
-
-type DeclarationType = 'fiscale' | 'introduction' | 'expedition'
-
-type InvoiceHeaderDraft = {
-  invoiceNumber: string
-  invoiceDate: string
-  regime: string
-  natureTransaction: string
-  tiersVatNumber: string
-  transportMode: string
-}
-
-type InvoiceLineDraft = {
-  nomenclatureCode: string
-  supplementaryUnit: string
-  mass: string
-  value: string
-  provCountryCode: string
-  originCountryCode: string
-}
-
-type InvoiceLine = InvoiceLineDraft & { id: string }
-
-const NATURES_INTRO = [
-  { value: '11', label: '11 : Achat/vente ferme (excepté commerce direct avec/par des particuliers)' },
-  { value: '12', label: '12 : Commerce direct avec/par des particuliers (y compris les ventes à distance)' },
-  { value: '21', label: '21 : Retour de biens (hors remplacement)' },
-  { value: '22', label: '22 : Remplacement de biens retournés' },
-  { value: '23', label: '23 : Remplacement (par ex. sous garantie) de biens non retournés' },
-  { value: '31', label: '31 : Mouvements vers/depuis un entrepôt (à l’exclusion des opérations énumérées à la modalité 32)' },
-  { value: '32', label: '32 : Livraison pour vente à vue ou à l’essai' },
-  { value: '33', label: '33 : Leasing financier (location-vente)' },
-  { value: '34', label: '34 : Transactions impliquant un transfert de propriété sans compensation financière (y compris troc)' },
-  { value: '41', label: '41 : Opérations en vue d’un travail à façon : biens réexpédiés vers l’État membre d’expédition initial' },
-  { value: '42', label: '42 : Opérations en vue d’un travail à façon : biens non réexpédiés vers l’État membre d’expédition initial' },
-  { value: '51', label: '51 : Opération après travail à façon. Biens réexpédiés vers l’État membre d’expédition initial' },
-  { value: '52', label: '52 : Opération après travail à façon : biens non réexpédiés vers l’État membre d’expédition initial' },
-  { value: '65', label: '65 : Transfert de biens sous le régime du perfectionnement actif' },
-  { value: '71', label: '71 : Transport de biens vers/depuis un autre État membre après importation d’un pays hors de l’UE' },
-  { value: '72', label: '72 : Transport de biens vers/depuis un autre État membre en vue de l’exporter hors de l’UE' },
-  { value: '80', label: '80 : Fourniture de matériaux dans le cadre d’un contrat de construction ou de génie civil' },
-  { value: '91', label: '91 : Location, prêt et leasing opérationnel pour une durée supérieure à 24 mois' },
-  { value: '99', label: '99 : Autres' },
-] as const
-
-const REGIMES_INTRO = [
-  { value: '11', label: '11 : Achat/vente ferme' },
-  { value: '19', label: '19 : Autres Introductions' },
-] as const
-
-const TRANSPORT_MODES = [
-  { value: '1', label: '1 : Transport maritime' },
-  { value: '2', label: '2 : Transport ferroviaire' },
-  { value: '3', label: '3 : Transport routier' },
-  { value: '4', label: '4 : Transport aérien' },
-  { value: '5', label: '5 : Envoi postal' },
-  { value: '7', label: '7 : Installations fixes' },
-  { value: '8', label: '8 : Navigation intérieure' },
-  { value: '9', label: '9 : Propulsion propre' },
-] as const
+import { NATURES_INTRO, REGIMES_INTRO, TRANSPORT_MODES } from '../constants/declaration'
 
 function getDeclarationTitle(t: DeclarationType) {
   if (t === 'introduction') return 'Déclaration d’introduction'
@@ -175,6 +116,7 @@ export default function Declaration() {
   const [partnerForm, setPartnerForm] = useState({ name: '', vatNumber: '', isoCode: '' })
   const [partnerError, setPartnerError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   const canValidateHeader =
@@ -692,6 +634,7 @@ export default function Declaration() {
             )}
 
             {saveError ? <p className="DeclarationSaveError">{saveError}</p> : null}
+            {saveSuccess ? <p className="DeclarationSaveSuccess">{saveSuccess}</p> : null}
 
             <div className="DeclarationActions DeclarationActionsEnd">
               <button
@@ -701,6 +644,7 @@ export default function Declaration() {
                 onClick={async () => {
                   if (!selectedPartnerId || !companyId) return
                   setSaveError(null)
+                  setSaveSuccess(null)
                   setSaving(true)
 
                   const d = headerDraft.invoiceDate ? new Date(headerDraft.invoiceDate) : new Date()
@@ -730,17 +674,19 @@ export default function Declaration() {
 
                   const res = await invoicesRequester.create(payload)
                   setSaving(false)
-                  if (res.status === 409) {
-                    setSaveError(
-                      `La facture n°${headerDraft.invoiceNumber.trim()} existe déjà pour ce fournisseur sur cette période.`
-                    )
-                  } else if (res.status === 400) {
-                    setSaveError('Certains champs sont manquants ou invalides. Vérifie le formulaire.')
-                  } else if (res.status === 500) {
-                    setSaveError('Enregistrement impossible. Une erreur serveur est survenue, réessaie.')
 
+                  if (!res.ok) {
+                    if (res.status === 409) {
+                      setSaveError(`La facture n°${headerDraft.invoiceNumber.trim()} existe déjà pour ce fournisseur sur cette période.`)
+                    } else if (res.status === 400) {
+                      setSaveError('Certains champs sont manquants ou invalides.')
+                    } else {
+                      setSaveError('Enregistrement impossible. Une erreur serveur est survenue.')
+                    }
                     return
                   }
+
+                  setSaveSuccess(`Facture n°${headerDraft.invoiceNumber.trim()} enregistrée avec succès.`)
                   resetAll()
                 }}
               >

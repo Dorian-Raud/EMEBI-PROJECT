@@ -1,0 +1,1 @@
+export type DeclarationType = 'fiscale' | 'introduction' | 'expedition';

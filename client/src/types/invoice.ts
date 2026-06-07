@@ -31,3 +31,24 @@ export type CreateInvoicePayload = {
     provCountryCode: string;
   }>;
 };
+
+export type InvoiceHeaderDraft = {
+  invoiceNumber: string;
+  invoiceDate: string;
+  regime: string;
+  natureTransaction: string;
+  tiersVatNumber: string;
+  transportMode: string;
+};
+
+export type InvoiceLineDraft = {
+  nomenclatureCode: string;
+  supplementaryUnit: string;
+  mass: string;
+  value: string;
+  provCountryCode: string;
+  originCountryCode: string;
+};
+
+export type InvoiceLine = InvoiceLineDraft & { id: string };
+

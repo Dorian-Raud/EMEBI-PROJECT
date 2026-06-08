@@ -4,7 +4,7 @@ import './Declaration.css'
 import { invoicesRequester } from '../lib/api/requester'
 import type { DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
 import { useClient } from '../context/ClientContext'
-import { NATURES_INTRO, REGIMES_INTRO, TRANSPORT_MODES } from '../constants/declaration'
+import { NATURES_INTRO, REGIMES_INTRO, REGIMES_EXPEDITION, TRANSPORT_MODES } from '../constants/declaration'
 import { Field } from '../components/FormField'
 import { PartnerModal } from '../components/PartnerModal'
 import { InvoiceLineRow } from '../components/InvoiceLineRow'
@@ -49,6 +49,8 @@ export default function Declaration() {
     () => deriveCountryCodeFromVat(headerDraft.tiersVatNumber),
     [headerDraft.tiersVatNumber],
   )
+  const regimes = type === 'expedition' ? REGIMES_EXPEDITION : REGIMES_INTRO
+  const flow = type === 'expedition' ? 'EXPEDITION' as const : 'INTRODUCTION' as const
 
   // ── Lignes ───────────────────────────────────────────────────────────────────
   const [lines, setLines] = useState<InvoiceLine[]>([])
@@ -109,7 +111,7 @@ export default function Declaration() {
     const d = headerDraft.invoiceDate ? new Date(headerDraft.invoiceDate) : new Date()
     const payload = {
       companyId,
-      flow: 'INTRODUCTION' as const,
+      flow,
       month: d.getMonth() + 1,
       year: d.getFullYear(),
       invoiceNumber: headerDraft.invoiceNumber.trim(),
@@ -159,7 +161,7 @@ export default function Declaration() {
 
       {!isSupported ? <div className="DeclarationPanel">Type de déclaration inconnu.</div> : null}
 
-      {type === 'introduction' ? (
+      {(type === 'introduction' || type === 'expedition') ? (
         <>
           <div className="DeclarationPanel">
             <h2 className="DeclarationPanelTitle">Entête de facture</h2>
@@ -173,7 +175,7 @@ export default function Declaration() {
               <Field label="Régime" required>
                 <select value={headerDraft.regime} onChange={(e) => setHeaderDraft((p) => ({ ...p, regime: e.target.value }))} className="FormInput FormSelect" disabled={headerValidated}>
                   <option value="" disabled>Sélectionner…</option>
-                  {REGIMES_INTRO.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  {regimes.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </Field>
               <Field label="Nature de la transaction" required>

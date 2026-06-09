@@ -6,17 +6,20 @@ const options = [
   {
     key: 'fiscale',
     title: 'Déclaration fiscale',
-    description: 'Flux fiscal / statistique',
+    description: 'Flux fiscal',
+    path: '/saisie/declaration-fiscale', // <-- Chemin personnalisé pour le fiscal
   },
   {
     key: 'introduction',
     title: 'Déclaration d’introduction',
     description: 'Entrée de biens sur le territoire',
+    path: '/saisie/declaration/introduction', // <-- Chemin classique douane
   },
   {
     key: 'expedition',
     title: 'Déclaration d’expédition',
     description: 'Sortie de biens vers un autre État membre',
+    path: '/saisie/declaration/expedition', // <-- Chemin classique douane
   },
 ] as const
 
@@ -41,7 +44,8 @@ export default function Declarations() {
 
       <div className="DeclarationsGrid">
         {options.map((o) => (
-          <Link key={o.key} to={`/saisie/declaration/${o.key}`} className="DeclarationsCard">
+          /* On utilise directement o.path au lieu de reconstruire l'URL à la main */
+          <Link key={o.key} to={o.path} className="DeclarationsCard">
             <h2 className="DeclarationsCardTitle">{o.title}</h2>
             <p>{o.description}</p>
           </Link>

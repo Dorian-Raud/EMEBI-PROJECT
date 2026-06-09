@@ -66,6 +66,7 @@ model Partner {
   
   headers         InvoiceHeader[]
   history         ProductHistory[]
+  fiscalLines      DeclarationFiscale[]
 
   @@unique([vatNumber, companyId]) // Un tiers est unique pour un client donné
 }
@@ -75,6 +76,23 @@ model Partner {
 enum Flow {
   INTRODUCTION
   EXPEDITION
+  FISCALE
+}
+
+model DeclarationFiscale {
+  id            String       @id @default(uuid())
+  invoiceNumber String
+  invoiceDate   DateTime?
+  regime        String
+  value         Float
+
+  partnerId     String
+  partner       Partner      @relation(fields: [partnerId], references: [id])
+
+  declarationId String?
+  declaration   Declaration? @relation(fields: [declarationId], references: [id])
+
+  @@unique([invoiceNumber, partnerId, declarationId])
 }
 
 model Declaration {
@@ -88,6 +106,7 @@ model Declaration {
   company     Company  @relation(fields: [companyId], references: [id])
   
   headers     InvoiceHeader[]
+  fiscalLines      DeclarationFiscale[]
 
   @@unique([companyId, month, year, flow])  // ← ajout
 }

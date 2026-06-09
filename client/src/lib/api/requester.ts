@@ -1,5 +1,5 @@
 import { apiFetch } from "./fetch";
-import type { Company, Partner, InvoiceSummary, CreateInvoicePayload } from "../../types";
+import type { Company, Partner, InvoiceSummary, CreateInvoicePayload, DeclarationFiscaleSummary, CreateDeclarationFiscalePayload } from "../../types";
 
 
 export const companiesRequester = {
@@ -19,6 +19,7 @@ export const companiesRequester = {
     apiFetch(`/api/companies/${id}`, { method: "DELETE" }),
 };
 
+// PARTNERS
 export const partnersRequester = {
   getAll: (companyId: string, q?: string) => {
     const params = new URLSearchParams({ companyId })
@@ -32,8 +33,7 @@ export const partnersRequester = {
     }),
 };
 
-
-
+// INVOICES
 export const invoicesRequester = {
   getAll: (
     companyId: string,
@@ -55,4 +55,21 @@ export const invoicesRequester = {
   delete: (id: string) =>
     apiFetch(`/invoices/${id}`, { method: "DELETE" }),
 };
+
+// DECLARATIONS FISCALES
+export const declarationsFiscalesRequester = {
+  getAll: (companyId: string, filters?: { month?: number; year?: number }) => {
+    const params = new URLSearchParams({ companyId });
+    if (filters?.month) params.set("month", String(filters.month));
+    if (filters?.year) params.set("year", String(filters.year));
+    return apiFetch<DeclarationFiscaleSummary[]>(`/declarations-fiscales?${params.toString()}`);
+  },
+  create: (data: CreateDeclarationFiscalePayload) =>
+    apiFetch<DeclarationFiscaleSummary>("/declarations-fiscales", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    apiFetch(`/declarations-fiscales/${id}`, { method: "DELETE" }),
+}
 

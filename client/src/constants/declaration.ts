@@ -1,4 +1,4 @@
-export const NATURES_INTRO = [
+export const NATURES = [
     { value: '11', label: '11 : Achat/vente ferme (excepté commerce direct avec/par des particuliers)' },
     { value: '12', label: '12 : Commerce direct avec/par des particuliers (y compris les ventes à distance)' },
     { value: '21', label: '21 : Retour de biens (hors remplacement)' },
@@ -28,6 +28,14 @@ export const REGIMES_INTRO = [
 export const REGIMES_EXPEDITION = [
     { value: '21', label: '21 : Achat/vente ferme' },
     { value: '29', label: '29 : Autres Expéditions' },
+] as const
+
+export const REGIMES_FISCALE = [
+    { value: '21', label: '21 : Livraison exonérée en France et taxable dans l\'état membre d\'arrivé' },
+    { value: '25', label: '25 : Régularisation commerciale entraînant une minoration de valeur ' },
+    { value: '26', label: '26 : Régularisation commerciale entraînant une majoration de valeur ' },
+    { value: '31', label: '31 : Opérations particulières ' },
+    { value: '20', label: '20 : Transfert de stock' },
 ] as const
 
 export const TRANSPORT_MODES = [

@@ -9,6 +9,7 @@ import Declaration from './pages/Declaration'
 import Etats from './pages/Etats'
 import Tiers from './pages/Tiers'
 import DeclarationsList from './pages/DeclarationsList'
+import DeclarationFiscale from './pages/DeclarationFiscale' 
 
 function RedirectDeclaration() {
   const { type } = useParams()
@@ -36,6 +37,7 @@ export default function App() {
             <Route element={<RequireClient />}>
               <Route path="/saisie/declarations" element={<Declarations />} />
               <Route path="/saisie/declaration/:type" element={<Declaration />} />
+              <Route path="/saisie/declaration-fiscale" element={<DeclarationFiscale />} />
               <Route path="/etats/view" element={<Etats />} />
               <Route path="/declarations-clients/view" element={<DeclarationsList />} />
               <Route path="/gestion/tiers" element={<Tiers />} />

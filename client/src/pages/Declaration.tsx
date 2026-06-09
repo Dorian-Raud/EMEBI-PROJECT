@@ -4,7 +4,7 @@ import './Declaration.css'
 import { invoicesRequester } from '../lib/api/requester'
 import type { DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
 import { useClient } from '../context/ClientContext'
-import { NATURES_INTRO, REGIMES_INTRO, REGIMES_EXPEDITION, TRANSPORT_MODES } from '../constants/declaration'
+import { NATURES, REGIMES_INTRO, REGIMES_EXPEDITION, TRANSPORT_MODES } from '../constants/declaration'
 import { Field } from '../components/FormField'
 import { PartnerModal } from '../components/PartnerModal'
 import { InvoiceLineRow } from '../components/InvoiceLineRow'
@@ -13,8 +13,7 @@ import { usePartners } from '../hooks/usePartners'
 
 function getDeclarationTitle(t: DeclarationType) {
   if (t === 'introduction') return 'Déclaration d’introduction'
-  if (t === 'expedition') return 'Déclaration d’expédition'
-  return 'Déclaration fiscale'
+  return 'Déclaration d’expédition'
 }
 
 function deriveCountryCodeFromVat(vat: string) {
@@ -36,7 +35,7 @@ export default function Declaration() {
   const type = (params.type as DeclarationType | undefined) ?? 'introduction'
   const companyId = selectedCompany?.id ?? ''
 
-  const isSupported = type === 'fiscale' || type === 'introduction' || type === 'expedition'
+  const isSupported = type === 'introduction' || type === 'expedition'
   const title = useMemo(() => (isSupported ? getDeclarationTitle(type) : 'Déclaration'), [isSupported, type])
 
   // ── Header ──────────────────────────────────────────────────────────────────
@@ -109,6 +108,7 @@ export default function Declaration() {
     setSaving(true)
 
     const d = headerDraft.invoiceDate ? new Date(headerDraft.invoiceDate) : new Date()
+
     const payload = {
       companyId,
       flow,
@@ -161,7 +161,7 @@ export default function Declaration() {
 
       {!isSupported ? <div className="DeclarationPanel">Type de déclaration inconnu.</div> : null}
 
-      {(type === 'introduction' || type === 'expedition') ? (
+      {isSupported ? (
         <>
           <div className="DeclarationPanel">
             <h2 className="DeclarationPanelTitle">Entête de facture</h2>
@@ -181,7 +181,7 @@ export default function Declaration() {
               <Field label="Nature de la transaction" required>
                 <select value={headerDraft.natureTransaction} onChange={(e) => setHeaderDraft((p) => ({ ...p, natureTransaction: e.target.value }))} className="FormInput FormSelect" disabled={headerValidated}>
                   <option value="" disabled>Sélectionner…</option>
-                  {NATURES_INTRO.map((n) => <option key={n.value} value={n.value}>{n.label}</option>)}
+                  {NATURES.map((n) => <option key={n.value} value={n.value}>{n.label}</option>)}
                 </select>
               </Field>
               <Field label="Tiers (N° TVA client)" required>
@@ -338,12 +338,7 @@ export default function Declaration() {
             />
           ) : null}
         </>
-      ) : (
-        <div className="DeclarationPanel">
-          <h2 style={{ marginBottom: 8 }}>À venir</h2>
-          <p>Le formulaire pour <b>{getDeclarationTitle(type)}</b> sera ajouté ensuite.</p>
-        </div>
-      )}
+      ) : null}
     </div>
   )
 }

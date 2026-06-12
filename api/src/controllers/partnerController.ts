@@ -79,11 +79,17 @@ export const updatePartner = async (req: Request<PartnerParams>, res: Response) 
 export const deletePartner = async (req: Request<PartnerParams>, res: Response) => {
   try {
     const { partnerId } = req.params;
-    await partnerService.deletePartner(partnerId);
+    const companyId = typeof req.query.companyId === "string" ? req.query.companyId : undefined;
+
+    if (!companyId) {
+      return res.status(400).json({ error: "companyId est obligatoire." });
+    }
+
+    await partnerService.deletePartner(partnerId, companyId);
     res.status(204).send();
   } catch (error: any) {
     if (error?.code === "P2025") {
-      return res.status(404).json({ error: "Tiers non trouvé" });
+      return res.status(404).json({ error: "Association tiers/société non trouvée." });
     }
     res.status(500).json({ error: "Erreur interne du serveur lors de la suppression." });
   }

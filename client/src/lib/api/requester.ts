@@ -16,7 +16,7 @@ export const companiesRequester = {
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
-    apiFetch(`/api/companies/${id}`, { method: "DELETE" }),
+    apiFetch(`/companies/${id}`, { method: "DELETE" }),
 };
 
 // PARTNERS
@@ -31,6 +31,8 @@ export const partnersRequester = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  delete: (partnerId: string, companyId: string) =>
+    apiFetch(`/partners/${partnerId}?companyId=${companyId}`, { method: "DELETE" }),
 };
 
 // INVOICES
@@ -46,10 +48,15 @@ export const invoicesRequester = {
     if (filters?.year) params.set("year", String(filters.year));
     return apiFetch<InvoiceSummary[]>(`/invoices?${params.toString()}`);
   },
-  getById: (id: string) => apiFetch(`/invoices/${id}`),
+  getById: (id: string) => apiFetch<any>(`/invoices/${id}`),
   create: (data: CreateInvoicePayload) =>
     apiFetch<InvoiceSummary>("/invoices", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Omit<CreateInvoicePayload, 'companyId' | 'flow' | 'month' | 'year'>>) =>
+    apiFetch<InvoiceSummary>(`/invoices/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
@@ -64,9 +71,15 @@ export const declarationsFiscalesRequester = {
     if (filters?.year) params.set("year", String(filters.year));
     return apiFetch<DeclarationFiscaleSummary[]>(`/declarations-fiscales?${params.toString()}`);
   },
+  getById: (id: string) => apiFetch<DeclarationFiscaleSummary>(`/declarations-fiscales/${id}`),
   create: (data: CreateDeclarationFiscalePayload) =>
     apiFetch<DeclarationFiscaleSummary>("/declarations-fiscales", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Pick<CreateDeclarationFiscalePayload, 'invoiceNumber' | 'invoiceDate' | 'regime' | 'value' | 'partnerId'>>) =>
+    apiFetch<DeclarationFiscaleSummary>(`/declarations-fiscales/${id}`, {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>

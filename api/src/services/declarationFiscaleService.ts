@@ -71,6 +71,38 @@ export async function listDeclarationsFiscales(args: {
   });
 }
 
+export async function getDeclarationFiscaleById(id: string) {
+  return prisma.declarationFiscale.findUnique({
+    where: { id },
+    include: {
+      partner: { select: { id: true, name: true, vatNumber: true, isoCode: true } },
+      declaration: { select: { id: true, flow: true, month: true, year: true, status: true } },
+    },
+  });
+}
+
+export async function updateDeclarationFiscale(
+  id: string,
+  input: Partial<Pick<CreateDeclarationFiscaleInput, 'invoiceNumber' | 'invoiceDate' | 'regime' | 'value' | 'partnerId'>>
+) {
+  return prisma.declarationFiscale.update({
+    where: { id },
+    data: {
+      ...(input.invoiceNumber !== undefined ? { invoiceNumber: input.invoiceNumber } : {}),
+      ...(input.invoiceDate !== undefined
+        ? { invoiceDate: input.invoiceDate ? new Date(input.invoiceDate) : null }
+        : {}),
+      ...(input.regime !== undefined ? { regime: input.regime } : {}),
+      ...(input.value !== undefined ? { value: input.value } : {}),
+      ...(input.partnerId !== undefined ? { partnerId: input.partnerId } : {}),
+    },
+    include: {
+      partner: { select: { id: true, name: true, vatNumber: true, isoCode: true } },
+      declaration: { select: { id: true, flow: true, month: true, year: true, status: true } },
+    },
+  });
+}
+
 export async function deleteDeclarationFiscale(id: string) {
   return prisma.declarationFiscale.delete({ where: { id } });
 }

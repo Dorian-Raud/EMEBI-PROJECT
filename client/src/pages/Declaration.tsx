@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import './Declaration.css'
 import { invoicesRequester } from '../lib/api/requester'
 import type { DeclarationType, InvoiceHeaderDraft, InvoiceLineDraft, InvoiceLine } from '../types'
@@ -32,11 +32,17 @@ function newId() {
 export default function Declaration() {
   const { selectedCompany } = useClient()
   const params = useParams()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const type = (params.type as DeclarationType | undefined) ?? 'introduction'
   const companyId = selectedCompany?.id ?? ''
+  const editId = searchParams.get('editId')
 
   const isSupported = type === 'introduction' || type === 'expedition'
-  const title = useMemo(() => (isSupported ? getDeclarationTitle(type) : 'Déclaration'), [isSupported, type])
+  const title = useMemo(
+    () => (isSupported ? `${editId ? 'Modifier' : 'Nouvelle'} ${getDeclarationTitle(type).toLowerCase()}` : 'Déclaration'),
+    [isSupported, type, editId]
+  )
 
   // ── Header ──────────────────────────────────────────────────────────────────
   const [headerDraft, setHeaderDraft] = useState<InvoiceHeaderDraft>({
@@ -82,6 +88,38 @@ export default function Declaration() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
+  // ── Chargement en mode édition ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!editId) return
+    invoicesRequester.getById(editId).then((res) => {
+      if (!res.ok || !res.data) return
+      const inv = res.data
+      const dateStr = inv.invoiceDate ? inv.invoiceDate.split('T')[0] : ''
+      setHeaderDraft({
+        invoiceNumber: inv.invoiceNumber ?? '',
+        invoiceDate: dateStr,
+        regime: inv.regime ?? '',
+        natureTransaction: inv.transactionNature ?? '',
+        tiersVatNumber: inv.partner?.vatNumber ?? '',
+        transportMode: inv.transportMode ?? '',
+      })
+      setSelectedPartnerId(inv.partner?.id ?? null)
+      setTiersQuery(inv.partner?.vatNumber ?? '')
+      setLines(
+        (inv.lines ?? []).map((l: any) => ({
+          id: l.id,
+          nomenclatureCode: l.nomenclature?.code ?? '',
+          mass: String(l.mass),
+          supplementaryUnit: l.supplementaryUnit != null ? String(l.supplementaryUnit) : '',
+          value: String(l.value),
+          originCountryCode: l.originCountryCode ?? '',
+          provCountryCode: l.provCountryCode ?? '',
+        }))
+      )
+      setHeaderValidated(true)
+    })
+  }, [editId])
+
   // ── Computed ─────────────────────────────────────────────────────────────────
   const canValidateHeader =
     !!headerDraft.invoiceNumber.trim() &&
@@ -107,31 +145,45 @@ export default function Declaration() {
     setSaveSuccess(null)
     setSaving(true)
 
-    const d = headerDraft.invoiceDate ? new Date(headerDraft.invoiceDate) : new Date()
+    const linePayload = lines.map((l, i) => ({
+      lineNumber: i + 1,
+      nomenclatureCode: l.nomenclatureCode.trim(),
+      mass: Number(l.mass),
+      supplementaryUnit: l.supplementaryUnit ? Number(l.supplementaryUnit) : null,
+      value: Number(l.value),
+      originCountryCode: l.originCountryCode.trim().toUpperCase(),
+      provCountryCode: l.provCountryCode.trim().toUpperCase(),
+    }))
 
-    const payload = {
-      companyId,
-      flow,
-      month: d.getMonth() + 1,
-      year: d.getFullYear(),
-      invoiceNumber: headerDraft.invoiceNumber.trim(),
-      invoiceDate: headerDraft.invoiceDate || null,
-      regime: headerDraft.regime,
-      transactionNature: headerDraft.natureTransaction,
-      transportMode: headerDraft.transportMode || null,
-      partnerId: selectedPartnerId,
-      lines: lines.map((l, i) => ({
-        lineNumber: i + 1,
-        nomenclatureCode: l.nomenclatureCode.trim(),
-        mass: Number(l.mass),
-        supplementaryUnit: l.supplementaryUnit ? Number(l.supplementaryUnit) : null,
-        value: Number(l.value),
-        originCountryCode: l.originCountryCode.trim().toUpperCase(),
-        provCountryCode: l.provCountryCode.trim().toUpperCase(),
-      })),
+    let res
+    if (editId) {
+      res = await invoicesRequester.update(editId, {
+        invoiceNumber: headerDraft.invoiceNumber.trim(),
+        invoiceDate: headerDraft.invoiceDate || null,
+        regime: headerDraft.regime,
+        transactionNature: headerDraft.natureTransaction,
+        transportMode: headerDraft.transportMode || null,
+        partnerId: selectedPartnerId,
+        lines: linePayload,
+      })
+    } else {
+      const d = headerDraft.invoiceDate ? new Date(headerDraft.invoiceDate) : new Date()
+      res = await invoicesRequester.create({
+        companyId,
+        flow,
+        month: d.getMonth() + 1,
+        year: d.getFullYear(),
+        invoiceNumber: headerDraft.invoiceNumber.trim(),
+        invoiceDate: headerDraft.invoiceDate || null,
+        regime: headerDraft.regime,
+        transactionNature: headerDraft.natureTransaction,
+        transportMode: headerDraft.transportMode || null,
+        partnerId: selectedPartnerId,
+        deptCode: '',
+        lines: linePayload,
+      })
     }
 
-    const res = await invoicesRequester.create(payload)
     setSaving(false)
 
     if (!res.ok) {
@@ -297,31 +349,37 @@ export default function Declaration() {
                 onClick={async () => {
                   const ok = await submitInvoice()
                   if (!ok) return
-                  setSaveSuccess(`Facture n°${headerDraft.invoiceNumber.trim()} enregistrée avec succès.`)
-                  resetAll()
+                  if (editId) {
+                    navigate('/etats/view')
+                  } else {
+                    setSaveSuccess(`Facture n°${headerDraft.invoiceNumber.trim()} enregistrée avec succès.`)
+                    resetAll()
+                  }
                 }}
               >
-                {saving ? 'Enregistrement…' : 'Valider facture'}
+                {saving ? 'Enregistrement…' : editId ? 'Enregistrer les modifications' : 'Valider facture'}
               </button>
-              <button
-                type="button"
-                className="BtnSecondary"
-                disabled={!headerValidated || lines.length === 0 || saving}
-                onClick={async () => {
-                  const ok = await submitInvoice()
-                  if (!ok) return
-                  setSaveSuccess(`Facture n°${headerDraft.invoiceNumber.trim()} enregistrée avec succès.`)
-                  setLines([])
-                  setLineDraft({
-                    nomenclatureCode: '', supplementaryUnit: '', mass: '', value: '',
-                    provCountryCode: autoCountryCode, originCountryCode: autoCountryCode,
-                  })
-                  setHeaderDraft((p) => ({ ...p, invoiceNumber: '' }))
-                  setHeaderValidated(false)
-                }}
-              >
-                Cloner facture
-              </button>
+              {!editId ? (
+                <button
+                  type="button"
+                  className="BtnSecondary"
+                  disabled={!headerValidated || lines.length === 0 || saving}
+                  onClick={async () => {
+                    const ok = await submitInvoice()
+                    if (!ok) return
+                    setSaveSuccess(`Facture n°${headerDraft.invoiceNumber.trim()} enregistrée avec succès.`)
+                    setLines([])
+                    setLineDraft({
+                      nomenclatureCode: '', supplementaryUnit: '', mass: '', value: '',
+                      provCountryCode: autoCountryCode, originCountryCode: autoCountryCode,
+                    })
+                    setHeaderDraft((p) => ({ ...p, invoiceNumber: '' }))
+                    setHeaderValidated(false)
+                  }}
+                >
+                  Cloner facture
+                </button>
+              ) : null}
             </div>
           </div>
 

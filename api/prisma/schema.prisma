@@ -44,31 +44,36 @@ model Nomenclature {
 // --- STRUCTURE CLIENTS (Multi-Sociétés) ---
 
 model Company {
-  id            String   @id @default(uuid())
-  name          String
-  siret         String   @unique
-  vatNumber     String   @unique
-  declarations  Declaration[]
-  partners      Partner[]
+  id              String           @id @default(uuid())
+  name            String
+  siret           String           @unique
+  vatNumber       String           @unique
+  declarations    Declaration[]
+  companyPartners CompanyPartner[]
 }
 
 model Partner {
-  id              String   @id @default(uuid())
+  id              String           @id @default(uuid())
   name            String
-  vatNumber       String   @unique   // TVA Intracom
-  isoCode         String   
-  country         Country  @relation(fields: [isoCode], references: [code])
+  vatNumber       String           @unique
+  isoCode         String
+  country         Country          @relation(fields: [isoCode], references: [code])
   deptCode        String?
-  department      Department? @relation(fields: [deptCode], references: [code])
-  
-  companyId       String
-  company         Company  @relation(fields: [companyId], references: [id])
-  
+  department      Department?      @relation(fields: [deptCode], references: [code])
+
+  companies       CompanyPartner[]
   headers         InvoiceHeader[]
   history         ProductHistory[]
-  fiscalLines      DeclarationFiscale[]
+  fiscalLines     DeclarationFiscale[]
+}
 
-  @@unique([vatNumber, companyId]) // Un tiers est unique pour un client donné
+model CompanyPartner {
+  companyId  String
+  partnerId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  partner    Partner  @relation(fields: [partnerId], references: [id])
+
+  @@id([companyId, partnerId])
 }
 
 // --- MOUVEMENTS (EMEBI / DEB) ---
@@ -89,8 +94,8 @@ model DeclarationFiscale {
   partnerId     String
   partner       Partner      @relation(fields: [partnerId], references: [id])
 
-  declarationId String?
-  declaration   Declaration? @relation(fields: [declarationId], references: [id])
+  declarationId String
+  declaration   Declaration @relation(fields: [declarationId], references: [id])
 
   @@unique([invoiceNumber, partnerId, declarationId])
 }
@@ -124,11 +129,11 @@ model InvoiceHeader {
   partnerId         String
   partner           Partner   @relation(fields: [partnerId], references: [id])
   
-  declarationId     String?
-  declaration       Declaration? @relation(fields: [declarationId], references: [id])
-  
+  declarationId     String
+  declaration       Declaration @relation(fields: [declarationId], references: [id])
+
   lines             InvoiceLine[]
-  @@unique([invoiceNumber, partnerId, declarationId])  // ← unicité composite
+  @@unique([invoiceNumber, partnerId, declarationId])
 }
 
 model InvoiceLine {

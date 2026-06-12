@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useClient } from '../context/ClientContext'
 import { usePartners } from '../hooks/usePartners'
 import { declarationsFiscalesRequester } from '../lib/api/requester'
@@ -9,6 +10,9 @@ import { PartnerModal } from '../components/PartnerModal'
 export default function DeclarationFiscale() {
   const { selectedCompany } = useClient()
   const companyId = selectedCompany?.id ?? ''
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const editId = searchParams.get('editId')
 
   const [form, setForm] = useState({
     invoiceNumber: '',
@@ -37,6 +41,24 @@ export default function DeclarationFiscale() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  // ── Chargement en mode édition ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!editId) return
+    declarationsFiscalesRequester.getById(editId).then((res) => {
+      if (!res.ok || !res.data) return
+      const d = res.data
+      const dateStr = d.invoiceDate ? d.invoiceDate.split('T')[0] : ''
+      setForm({
+        invoiceNumber: d.invoiceNumber ?? '',
+        invoiceDate: dateStr,
+        regime: d.regime ?? '',
+        value: String(d.value ?? ''),
+      })
+      setSelectedPartnerId(d.partner?.id ?? null)
+      setTiersQuery(d.partner?.vatNumber ?? '')
+    })
+  }, [editId])
+
   const canSubmit = 
     !!form.invoiceNumber.trim() && 
     !!form.invoiceDate && 
@@ -52,18 +74,28 @@ export default function DeclarationFiscale() {
     setError(null)
     setSuccess(null)
 
-    const dateObj = new Date(form.invoiceDate)
-
-    const res = await declarationsFiscalesRequester.create({
-      companyId,
-      month: dateObj.getMonth() + 1,
-      year: dateObj.getFullYear(),
-      invoiceNumber: form.invoiceNumber.trim(),
-      invoiceDate: form.invoiceDate,
-      regime: form.regime,
-      value: Number(form.value),
-      partnerId: selectedPartnerId,
-    })
+    let res
+    if (editId) {
+      res = await declarationsFiscalesRequester.update(editId, {
+        invoiceNumber: form.invoiceNumber.trim(),
+        invoiceDate: form.invoiceDate || null,
+        regime: form.regime,
+        value: Number(form.value),
+        partnerId: selectedPartnerId!,
+      })
+    } else {
+      const dateObj = new Date(form.invoiceDate)
+      res = await declarationsFiscalesRequester.create({
+        companyId,
+        month: dateObj.getMonth() + 1,
+        year: dateObj.getFullYear(),
+        invoiceNumber: form.invoiceNumber.trim(),
+        invoiceDate: form.invoiceDate,
+        regime: form.regime,
+        value: Number(form.value),
+        partnerId: selectedPartnerId!,
+      })
+    }
 
     setLoading(false)
     return res.ok
@@ -75,7 +107,7 @@ export default function DeclarationFiscale() {
     <div className="DeclarationPage">
       <div className="DeclarationTop">
         <div>
-          <h1 className="DeclarationTitle">Déclaration Fiscale</h1>
+          <h1 className="DeclarationTitle">{editId ? 'Modifier la déclaration fiscale' : 'Déclaration Fiscale'}</h1>
           <p>Client : <b>{selectedCompany.name}</b></p>
         </div>
       </div>
@@ -151,50 +183,50 @@ export default function DeclarationFiscale() {
         {/* 2. Zone des boutons d'action */}
         <div className="DeclarationActions DeclarationActionsEnd" style={{ marginTop: 24 }}>
           
-          {/* BOUTON STANDARD : On valide et on vide TOUT */}
-          <button 
-            type="button" 
-            className="BtnPrimary" 
+          {/* BOUTON STANDARD */}
+          <button
+            type="button"
+            className="BtnPrimary"
             disabled={!canSubmit || loading}
             onClick={async () => {
               const ok = await executeSave()
               if (ok) {
-                setSuccess(`Déclaration fiscale n°${form.invoiceNumber.trim()} enregistrée avec succès !`)
-                setForm({ invoiceNumber: '', invoiceDate: '', regime: '', value: '' })
-                setTiersQuery('')
-                setSelectedPartnerId(null)
+                if (editId) {
+                  navigate('/etats/view')
+                } else {
+                  setSuccess(`Déclaration fiscale n°${form.invoiceNumber.trim()} enregistrée avec succès !`)
+                  setForm({ invoiceNumber: '', invoiceDate: '', regime: '', value: '' })
+                  setTiersQuery('')
+                  setSelectedPartnerId(null)
+                }
               } else {
                 setError("Une erreur est survenue lors de l'enregistrement.")
               }
             }}
           >
-            {loading ? 'Enregistrement…' : 'Enregistrer la déclaration'}
+            {loading ? 'Enregistrement…' : editId ? 'Enregistrer les modifications' : 'Enregistrer la déclaration'}
           </button>
 
-          {/* BOUTON CONFORT : On valide, mais on garde le fournisseur, la date et le régime */}
-          <button 
-            type="button" 
-            className="BtnSecondary" 
-            disabled={!canSubmit || loading}
-            onClick={async () => {
-              const savedInvoiceNumber = form.invoiceNumber.trim()
-              const ok = await executeSave()
-              if (ok) {
-                setSuccess(`Facture n°${savedInvoiceNumber} enregistrée ! Prête pour le clonage.`)
-                
-                // On ne vide QUE le numéro et le montant
-                setForm(prev => ({
-                  ...prev,
-                  invoiceNumber: '',
-                  value: ''
-                }))
-              } else {
-                setError("Une erreur est survenue lors de l'enregistrement.")
-              }
-            }}
-          >
-            Cloner facture
-          </button>
+          {/* BOUTON CONFORT : masqué en mode édition */}
+          {!editId ? (
+            <button
+              type="button"
+              className="BtnSecondary"
+              disabled={!canSubmit || loading}
+              onClick={async () => {
+                const savedInvoiceNumber = form.invoiceNumber.trim()
+                const ok = await executeSave()
+                if (ok) {
+                  setSuccess(`Facture n°${savedInvoiceNumber} enregistrée ! Prête pour le clonage.`)
+                  setForm(prev => ({ ...prev, invoiceNumber: '', value: '' }))
+                } else {
+                  setError("Une erreur est survenue lors de l'enregistrement.")
+                }
+              }}
+            >
+              Cloner facture
+            </button>
+          ) : null}
 
         </div>
       </form>

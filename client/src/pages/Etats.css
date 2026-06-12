@@ -12,6 +12,17 @@
   color: #475569;
 }
 
+.EtatsChangePeriod {
+  margin-left: 0.75rem;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.EtatsChangePeriod:hover {
+  text-decoration: underline;
+}
+
 .EtatsFilters {
   display: flex;
   flex-wrap: wrap;

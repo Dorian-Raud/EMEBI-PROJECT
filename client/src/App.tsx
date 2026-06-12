@@ -29,7 +29,7 @@ export default function App() {
             <Route path="/saisie" element={<SelectClient />} />
 
             {/* États flow: pick client (no create) then view */}
-            <Route path="/etats" element={<SelectClient nextPath="/etats/view" showCreate={false} />} />
+            <Route path="/etats" element={<SelectClient nextPath="/etats/view" showCreate={false} requirePeriod />} />
 
             {/* Déclarations clients flow: pick client (no create) then view */}
             <Route path="/declarations-clients" element={<SelectClient nextPath="/declarations-clients/view" showCreate={false} />} />

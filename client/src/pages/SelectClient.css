@@ -5,10 +5,6 @@
   margin: 0 auto;
 }
 
-.SelectClientTitle {
-  margin-bottom: 8px;
-}
-
 .SelectClientHint {
   margin-bottom: 20px;
 }
@@ -146,4 +142,27 @@
 .SelectClientEmpty {
   font-size: 14px;
   opacity: 0.9;
+}
+.SelectClientPeriod {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.SelectClientPeriodLabel {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.SelectClientPeriodSelect {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 0 12px;
+  font: inherit;
+  color: var(--text-h);
+  background: var(--bg);
+  cursor: pointer;
 }

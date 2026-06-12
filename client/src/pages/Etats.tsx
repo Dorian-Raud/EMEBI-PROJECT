@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Navigate, Link } from 'react-router-dom'
 import { invoicesRequester, declarationsFiscalesRequester } from '../lib/api/requester'
 import { useClient } from '../context/ClientContext'
 import { Toast, makeToastId } from '../components/Toast'
 import type { ToastItem } from '../components/Toast'
 import { Pagination } from '../components/Pagination'
-import { usePeriodFilter, monthNames } from '../hooks/usePeriodFilter'
+import { usePagination } from '../hooks/usePagination'
+import { monthNames } from '../constants/period'
 import './Etats.css'
 
 const flowLabels: Record<string, string> = {
@@ -32,6 +33,11 @@ export default function Etats() {
   const { selectedCompany } = useClient()
   const companyId = selectedCompany?.id ?? ''
   const navigate = useNavigate()
+
+  // Période choisie en amont (écran de sélection du client), transportée via l'URL
+  const [searchParams] = useSearchParams()
+  const month = Number(searchParams.get('month'))
+  const year = Number(searchParams.get('year'))
 
   const [invoices, setInvoices] = useState<NormalizedInvoice[]>([])
   const [q, setQ] = useState('')
@@ -64,6 +70,8 @@ export default function Etats() {
         const res = await invoicesRequester.getAll(companyId, {
           q: searchTerms || undefined,
           flow: flow || undefined,
+          month,
+          year,
         })
         if (res.ok && res.data) {
           standardList = res.data.map((inv: any) => ({
@@ -83,7 +91,7 @@ export default function Etats() {
       }
 
       if (flow === '' || flow === 'FISCALE') {
-        const res = await declarationsFiscalesRequester.getAll(companyId)
+        const res = await declarationsFiscalesRequester.getAll(companyId, { month, year })
         if (res.ok && res.data) {
           let rawFiscal = res.data
           if (searchTerms) {
@@ -122,7 +130,7 @@ export default function Etats() {
     }
   }
 
-  useEffect(() => { load() }, [companyId])
+  useEffect(() => { load() }, [companyId, month, year])
 
   const handleEdit = (inv: NormalizedInvoice) => {
     if (inv.flow === 'INTRODUCTION') navigate(`/saisie/declaration/introduction?editId=${inv.id}`)
@@ -152,16 +160,20 @@ export default function Etats() {
     }
   }
 
-  // Filtre période (mois / année) + pagination — logique partagée
-  const { month, setMonth, year, setYear, years, filtered, paged, page, setPage, pageCount } =
-    usePeriodFilter(invoices, 20)
+  // La période est fixée en amont : on ne fait plus que paginer la liste chargée
+  const { paged, page, setPage, pageCount, total } = usePagination(invoices, 10)
 
   if (!selectedCompany) return null
+  // Garde-fou : sans période valide dans l'URL, on renvoie au choix client + période
+  if (!month || !year) return <Navigate to="/etats" replace />
 
   return (
     <div className="EtatsPage">
       <h1 className="EtatsTitle">États — factures saisies</h1>
-      <p className="EtatsSubtitle">Client : <b>{selectedCompany.name}</b></p>
+      <p className="EtatsSubtitle">
+        Client : <b>{selectedCompany.name}</b> · Période : <b>{monthNames[month - 1]} {year}</b>
+        <Link to="/etats" className="EtatsChangePeriod">← Changer de période</Link>
+      </p>
 
       <div className="EtatsFilters">
         <input
@@ -177,18 +189,6 @@ export default function Etats() {
           <option value="EXPEDITION">Expédition</option>
           <option value="FISCALE">Fiscale</option>
         </select>
-        <select className="EtatsSelect" value={month} onChange={(e) => setMonth(e.target.value)}>
-          <option value="">Mois</option>
-          {monthNames.map((name, i) => (
-            <option key={i + 1} value={i + 1}>{name}</option>
-          ))}
-        </select>
-        <select className="EtatsSelect" value={year} onChange={(e) => setYear(e.target.value)}>
-          <option value="">Années</option>
-          {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
         <button type="button" className="EtatsSearchBtn" onClick={load} disabled={loading}>
           {loading ? 'Chargement…' : 'Rechercher'}
         </button>
@@ -196,7 +196,7 @@ export default function Etats() {
 
       {error ? <p className="EtatsError">{error}</p> : null}
 
-      {filtered.length === 0 && !loading ? (
+      {total === 0 && !loading ? (
         <p className="EtatsEmpty">Aucune facture pour ces critères.</p>
       ) : (
         <div className="EtatsTableWrap">
@@ -248,7 +248,7 @@ export default function Etats() {
           </table>
 
           <Pagination
-            total={filtered.length}
+            total={total}
             page={page}
             pageCount={pageCount}
             onPageChange={setPage}

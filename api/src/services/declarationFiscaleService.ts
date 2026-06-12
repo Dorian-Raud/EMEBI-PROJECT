@@ -67,7 +67,6 @@ export async function listDeclarationsFiscales(args: {
       declaration: { select: { id: true, flow: true, month: true, year: true, status: true } },
     },
     orderBy: [{ createdAt: "desc" }],
-    take: 100,
   });
 }
 

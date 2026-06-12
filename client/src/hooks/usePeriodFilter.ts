@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { usePagination } from './usePagination'
 
-export const monthNames = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-]
+export { monthNames } from '../constants/period'
 
 /** Tout élément filtrable par période doit exposer un mois et une année. */
 export interface PeriodItem {
@@ -19,12 +17,11 @@ export interface PeriodItem {
  *
  * - Filtre la liste par mois et/ou année (côté client).
  * - Dérive les années réellement présentes dans les données (pour alimenter le select).
- * - Pagine le résultat, et revient en page 1 dès qu'un filtre ou les données changent.
+ * - Délègue la pagination à usePagination (retour auto en page 1 inclus).
  */
 export function usePeriodFilter<T extends PeriodItem>(items: T[], pageSize = 20) {
     const [month, setMonth] = useState('')
     const [year, setYear] = useState('')
-    const [page, setPage] = useState(1)
 
     const filtered = useMemo(
         () =>
@@ -42,12 +39,7 @@ export function usePeriodFilter<T extends PeriodItem>(items: T[], pageSize = 20)
         return [...set].sort((a, b) => b - a)
     }, [items])
 
-    const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
-    const currentPage = Math.min(page, pageCount)
-    const paged = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-
-    // Revenir à la première page dès qu'un filtre ou les données changent
-    useEffect(() => { setPage(1) }, [month, year, items])
+    const { paged, page, setPage, pageCount } = usePagination(filtered, pageSize)
 
     return {
         month,
@@ -57,7 +49,7 @@ export function usePeriodFilter<T extends PeriodItem>(items: T[], pageSize = 20)
         years,
         filtered,
         paged,
-        page: currentPage,
+        page,
         setPage,
         pageCount,
     }

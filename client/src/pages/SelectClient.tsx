@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { companiesRequester } from '../lib/api/requester'
 import type { Company } from '../types'
 import { useClient } from '../context/ClientContext'
+import { monthNames, recentYears } from '../constants/period'
 import './SelectClient.css'
 
 type SelectClientProps = {
@@ -10,9 +11,14 @@ type SelectClientProps = {
   nextPath?: string
   /** Whether to show the "Ajouter un client" form (default true) */
   showCreate?: boolean
+  /** Whether to require a period (month/year) before continuing — used by the États flow */
+  requirePeriod?: boolean
 }
 
-export default function SelectClient({ nextPath = '/saisie/declarations', showCreate = true }: SelectClientProps) {
+const now = new Date()
+const years = recentYears()
+
+export default function SelectClient({ nextPath = '/saisie/declarations', showCreate = true, requirePeriod = false }: SelectClientProps) {
   const navigate = useNavigate()
   const { selectCompany } = useClient()
 
@@ -21,6 +27,12 @@ export default function SelectClient({ nextPath = '/saisie/declarations', showCr
   const [form, setForm] = useState({ name: '', siret: '', vatNumber: '' })
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [year, setYear] = useState(now.getFullYear())
+
+  // Construit la cible de navigation, en ajoutant la période choisie si requise
+  const buildTarget = () =>
+    requirePeriod ? `${nextPath}?month=${month}&year=${year}` : nextPath
 
   useEffect(() => {
     const load = async () => {
@@ -44,13 +56,13 @@ export default function SelectClient({ nextPath = '/saisie/declarations', showCr
       setForm({ name: '', siret: '', vatNumber: '' })
       setShowForm(false)
       selectCompany(res.data)
-      navigate(nextPath)
+      navigate(buildTarget())
     }
   }
 
   const handleSelect = (company: Company) => {
     selectCompany(company)
-    navigate(nextPath)
+    navigate(buildTarget())
   }
 
   const filtered = companies.filter((c) => {
@@ -67,6 +79,30 @@ export default function SelectClient({ nextPath = '/saisie/declarations', showCr
     <div className="SelectClientPage">
       <h1 className="SelectClientTitle">Choisir un client</h1>
 
+
+      {requirePeriod ? (
+        <div className="SelectClientPeriod">
+          <span className="SelectClientPeriodLabel">Période :</span>
+          <select
+            className="SelectClientPeriodSelect"
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+          >
+            {monthNames.map((name, i) => (
+              <option key={i + 1} value={i + 1}>{name}</option>
+            ))}
+          </select>
+          <select
+            className="SelectClientPeriodSelect"
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      ) : null}
 
       <div className="SelectClientToolbar">
         <div className="SelectClientSearchWrap">

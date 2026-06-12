@@ -106,7 +106,6 @@ export async function listInvoices(args: {
       lines: { select: { id: true, value: true } },
     },
     orderBy: [{ createdAt: "desc" }],
-    take: 100,
   });
 }
 

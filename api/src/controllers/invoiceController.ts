@@ -90,7 +90,9 @@ export async function removeInvoice(req: Request, res: Response) {
   try {
     await deleteInvoice(String(req.params.invoiceId));
     return res.status(204).send();
-  } catch {
-    return res.status(404).json({ error: "Facture introuvable" });
+  } catch (err: unknown) {
+    const code = err && typeof err === "object" && "code" in err ? err.code : null;
+    if (code === "P2025") return res.status(404).json({ error: "Facture introuvable" });
+    return res.status(500).json({ error: "Impossible de supprimer la facture" });
   }
 }

@@ -244,5 +244,8 @@ export async function updateInvoice(invoiceId: string, input: UpdateInvoiceInput
 }
 
 export async function deleteInvoice(invoiceId: string) {
-  return prisma.invoiceHeader.delete({ where: { id: invoiceId } });
+  return prisma.$transaction([
+    prisma.invoiceLine.deleteMany({ where: { headerId: invoiceId } }),
+    prisma.invoiceHeader.delete({ where: { id: invoiceId } }),
+  ]);
 }

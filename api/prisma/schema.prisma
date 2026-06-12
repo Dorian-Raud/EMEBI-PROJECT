@@ -86,6 +86,7 @@ enum Flow {
 
 model DeclarationFiscale {
   id            String       @id @default(uuid())
+  createdAt     DateTime     @default(now())
   invoiceNumber String
   invoiceDate   DateTime?
   regime        String
@@ -118,8 +119,9 @@ model Declaration {
 
 model InvoiceHeader {
   id                String    @id @default(uuid())
-  invoiceNumber     String 
-  invoiceDate       DateTime? 
+  createdAt         DateTime  @default(now())
+  invoiceNumber     String
+  invoiceDate       DateTime?
   regime            String    
   transactionNature String    
   transportMode     String?   

@@ -105,7 +105,7 @@ export async function listInvoices(args: {
       declaration: { select: { id: true, flow: true, month: true, year: true, status: true } },
       lines: { select: { id: true, value: true } },
     },
-    orderBy: [{ invoiceDate: "desc" }, { invoiceNumber: "asc" }],
+    orderBy: [{ createdAt: "desc" }],
     take: 100,
   });
 }

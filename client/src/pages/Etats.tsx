@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { invoicesRequester, declarationsFiscalesRequester } from '../lib/api/requester'
 import { useClient } from '../context/ClientContext'
@@ -11,6 +11,13 @@ const flowLabels: Record<string, string> = {
   EXPEDITION: 'Expédition',
   FISCALE: 'Fiscale'
 }
+
+const monthNames = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+]
+
+const PAGE_SIZE = 20
 
 interface NormalizedInvoice {
   id: string
@@ -33,6 +40,9 @@ export default function Etats() {
   const [invoices, setInvoices] = useState<NormalizedInvoice[]>([])
   const [q, setQ] = useState('')
   const [flow, setFlow] = useState('')
+  const [month, setMonth] = useState('')
+  const [year, setYear] = useState('')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -148,6 +158,32 @@ export default function Etats() {
     }
   }
 
+  // Filtre période (mois / année) appliqué côté client sur la liste déjà chargée
+  const filtered = useMemo(
+    () =>
+      invoices.filter(
+        (inv) =>
+          (month === '' || inv.month === Number(month)) &&
+          (year === '' || inv.year === Number(year))
+      ),
+    [invoices, month, year]
+  )
+
+  // Années disponibles dans les données, pour alimenter le filtre
+  const years = useMemo(() => {
+    const set = new Set<number>()
+    invoices.forEach((inv) => { if (inv.year) set.add(inv.year) })
+    return [...set].sort((a, b) => b - a)
+  }, [invoices])
+
+  // Pagination
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  // Revenir à la première page dès qu'un filtre ou les données changent
+  useEffect(() => { setPage(1) }, [month, year, invoices])
+
   if (!selectedCompany) return null
 
   return (
@@ -164,10 +200,22 @@ export default function Etats() {
           onKeyDown={(e) => { if (e.key === 'Enter') load() }}
         />
         <select className="EtatsSelect" value={flow} onChange={(e) => setFlow(e.target.value)}>
-          <option value="">Tous les flux</option>
+          <option value="">Flux</option>
           <option value="INTRODUCTION">Introduction</option>
           <option value="EXPEDITION">Expédition</option>
           <option value="FISCALE">Fiscale</option>
+        </select>
+        <select className="EtatsSelect" value={month} onChange={(e) => setMonth(e.target.value)}>
+          <option value="">Mois</option>
+          {monthNames.map((name, i) => (
+            <option key={i + 1} value={i + 1}>{name}</option>
+          ))}
+        </select>
+        <select className="EtatsSelect" value={year} onChange={(e) => setYear(e.target.value)}>
+          <option value="">Années</option>
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
         </select>
         <button type="button" className="EtatsSearchBtn" onClick={load} disabled={loading}>
           {loading ? 'Chargement…' : 'Rechercher'}
@@ -176,7 +224,7 @@ export default function Etats() {
 
       {error ? <p className="EtatsError">{error}</p> : null}
 
-      {invoices.length === 0 && !loading ? (
+      {filtered.length === 0 && !loading ? (
         <p className="EtatsEmpty">Aucune facture pour ces critères.</p>
       ) : (
         <div className="EtatsTableWrap">
@@ -194,7 +242,7 @@ export default function Etats() {
               </tr>
             </thead>
             <tbody>
-              {invoices.map((inv) => (
+              {paged.map((inv) => (
                 <tr key={inv.id}>
                   <td>{inv.invoiceNumber}</td>
                   <td>{String(inv.month).padStart(2, '0')}/{inv.year}</td>
@@ -226,6 +274,31 @@ export default function Etats() {
               ))}
             </tbody>
           </table>
+
+          <div className="EtatsPagination">
+            <span className="EtatsPaginationInfo">
+              {filtered.length} facture{filtered.length > 1 ? 's' : ''} ·
+              page {currentPage}/{pageCount}
+            </span>
+            <div className="EtatsPaginationBtns">
+              <button
+                type="button"
+                className="EtatsBtn EtatsBtn--secondary"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+              >
+                ← Précédent
+              </button>
+              <button
+                type="button"
+                className="EtatsBtn EtatsBtn--secondary"
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                disabled={currentPage >= pageCount}
+              >
+                Suivant →
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

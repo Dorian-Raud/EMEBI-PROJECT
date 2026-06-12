@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams, Navigate, Link } from 'react-router-dom'
-import { invoicesRequester, declarationsFiscalesRequester } from '../lib/api/requester'
+import { invoicesRequester, declarationsFiscalesRequester, etatsRequester } from '../lib/api/requester'
 import { useClient } from '../context/ClientContext'
 import { Toast, makeToastId } from '../components/Toast'
 import type { ToastItem } from '../components/Toast'
@@ -62,59 +62,44 @@ export default function Etats() {
     setError(null)
 
     try {
+      // On charge TOUTE la période (tous flux confondus) : le filtre flux/recherche
+      // se fait ensuite côté client, et les compteurs par flux des boutons PDF
+      // en découlent (indépendants des filtres du tableau).
       let standardList: NormalizedInvoice[] = []
       let fiscalList: NormalizedInvoice[] = []
-      const searchTerms = q.trim().toLowerCase()
 
-      if (flow !== 'FISCALE') {
-        const res = await invoicesRequester.getAll(companyId, {
-          q: searchTerms || undefined,
-          flow: flow || undefined,
-          month,
-          year,
-        })
-        if (res.ok && res.data) {
-          standardList = res.data.map((inv: any) => ({
-            id: inv.id,
-            createdAt: inv.createdAt,
-            invoiceNumber: inv.invoiceNumber,
-            month: inv.declaration?.month ?? 1,
-            year: inv.declaration?.year ?? 2026,
-            flow: inv.declaration?.flow ?? 'INTRODUCTION',
-            partnerName: inv.partner?.name ?? 'Inconnu',
-            partnerVat: inv.partner?.vatNumber ?? '',
-            regime: inv.regime,
-            transactionNature: inv.transactionNature || 'N/A',
-            totalHT: (inv.lines ?? []).reduce((sum: number, l: any) => sum + Number(l.value), 0)
-          }))
-        }
+      const resInv = await invoicesRequester.getAll(companyId, { month, year })
+      if (resInv.ok && resInv.data) {
+        standardList = resInv.data.map((inv: any) => ({
+          id: inv.id,
+          createdAt: inv.createdAt,
+          invoiceNumber: inv.invoiceNumber,
+          month: inv.declaration?.month ?? 1,
+          year: inv.declaration?.year ?? 2026,
+          flow: inv.declaration?.flow ?? 'INTRODUCTION',
+          partnerName: inv.partner?.name ?? 'Inconnu',
+          partnerVat: inv.partner?.vatNumber ?? '',
+          regime: inv.regime,
+          transactionNature: inv.transactionNature || 'N/A',
+          totalHT: (inv.lines ?? []).reduce((sum: number, l: any) => sum + Number(l.value), 0)
+        }))
       }
 
-      if (flow === '' || flow === 'FISCALE') {
-        const res = await declarationsFiscalesRequester.getAll(companyId, { month, year })
-        if (res.ok && res.data) {
-          let rawFiscal = res.data
-          if (searchTerms) {
-            rawFiscal = rawFiscal.filter((fisc: any) =>
-              fisc.invoiceNumber.toLowerCase().includes(searchTerms) ||
-              (fisc.partner?.name ?? '').toLowerCase().includes(searchTerms) ||
-              (fisc.partner?.vatNumber ?? '').toLowerCase().includes(searchTerms)
-            )
-          }
-          fiscalList = rawFiscal.map((fisc: any) => ({
-            id: fisc.id,
-            createdAt: fisc.createdAt,
-            invoiceNumber: fisc.invoiceNumber,
-            month: fisc.declaration?.month,
-            year: fisc.declaration?.year,
-            flow: 'FISCALE',
-            partnerName: fisc.partner?.name ?? 'Inconnu',
-            partnerVat: fisc.partner?.vatNumber ?? '',
-            regime: fisc.regime,
-            transactionNature: '—',
-            totalHT: Number(fisc.value)
-          }))
-        }
+      const resFisc = await declarationsFiscalesRequester.getAll(companyId, { month, year })
+      if (resFisc.ok && resFisc.data) {
+        fiscalList = resFisc.data.map((fisc: any) => ({
+          id: fisc.id,
+          createdAt: fisc.createdAt,
+          invoiceNumber: fisc.invoiceNumber,
+          month: fisc.declaration?.month,
+          year: fisc.declaration?.year,
+          flow: 'FISCALE',
+          partnerName: fisc.partner?.name ?? 'Inconnu',
+          partnerVat: fisc.partner?.vatNumber ?? '',
+          regime: fisc.regime,
+          transactionNature: '—',
+          totalHT: Number(fisc.value)
+        }))
       }
 
       // Tri par date de saisie réelle (createdAt) : les plus récentes d'abord
@@ -160,12 +145,39 @@ export default function Etats() {
     }
   }
 
-  // La période est fixée en amont : on ne fait plus que paginer la liste chargée
-  const { paged, page, setPage, pageCount, total } = usePagination(invoices, 10)
+  // Filtres client-side instantanés (la période est déjà bornée en amont)
+  const displayed = useMemo(() => {
+    const term = q.trim().toLowerCase()
+    return invoices.filter((inv) =>
+      (flow === '' || inv.flow === flow) &&
+      (term === '' ||
+        inv.invoiceNumber.toLowerCase().includes(term) ||
+        inv.partnerName.toLowerCase().includes(term) ||
+        inv.partnerVat.toLowerCase().includes(term))
+    )
+  }, [invoices, q, flow])
+
+  // Nombre de factures par flux sur la période (pour les boutons PDF), indépendant des filtres
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { INTRODUCTION: 0, EXPEDITION: 0, FISCALE: 0 }
+    invoices.forEach((inv) => { c[inv.flow] = (c[inv.flow] ?? 0) + 1 })
+    return c
+  }, [invoices])
+
+  const { paged, page, setPage, pageCount, total } = usePagination(displayed, 10)
 
   if (!selectedCompany) return null
   // Garde-fou : sans période valide dans l'URL, on renvoie au choix client + période
   if (!month || !year) return <Navigate to="/etats" replace />
+
+  const openPdf = (f: string) =>
+    window.open(etatsRequester.pdfUrl(companyId, month, year, f), '_blank')
+
+  const pdfButtons = [
+    { flow: 'INTRODUCTION', label: 'État Introduction' },
+    { flow: 'EXPEDITION', label: 'État Expédition' },
+    { flow: 'FISCALE', label: 'État Déclaration fiscale' },
+  ]
 
   return (
     <div className="EtatsPage">
@@ -181,22 +193,44 @@ export default function Etats() {
           placeholder="Rechercher (n° facture, tiers, TVA…)"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') load() }}
         />
         <select className="EtatsSelect" value={flow} onChange={(e) => setFlow(e.target.value)}>
-          <option value="">Flux</option>
+          <option value="">Tous les flux</option>
           <option value="INTRODUCTION">Introduction</option>
           <option value="EXPEDITION">Expédition</option>
           <option value="FISCALE">Fiscale</option>
         </select>
-        <button type="button" className="EtatsSearchBtn" onClick={load} disabled={loading}>
-          {loading ? 'Chargement…' : 'Rechercher'}
-        </button>
+      </div>
+
+      <div className="EtatsPdfBar">
+        <span className="EtatsPdfBarLabel">Générer un état :</span>
+        {pdfButtons.map((b) => {
+          const count = counts[b.flow] ?? 0
+          const disabled = count === 0
+          return (
+            <button
+              key={b.flow}
+              type="button"
+              className="EtatsPdfBtn"
+              disabled={disabled}
+              title={
+                disabled
+                  ? `Aucune facture ${flowLabels[b.flow]} pour ${monthNames[month - 1]} ${year}`
+                  : `Générer l'état ${flowLabels[b.flow]} (${count} facture${count > 1 ? 's' : ''})`
+              }
+              onClick={() => openPdf(b.flow)}
+            >
+              📄 {b.label}
+            </button>
+          )
+        })}
       </div>
 
       {error ? <p className="EtatsError">{error}</p> : null}
 
-      {total === 0 && !loading ? (
+      {loading ? (
+        <p className="EtatsEmpty">Chargement…</p>
+      ) : total === 0 ? (
         <p className="EtatsEmpty">Aucune facture pour ces critères.</p>
       ) : (
         <div className="EtatsTableWrap">

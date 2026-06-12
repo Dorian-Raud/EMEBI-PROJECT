@@ -86,3 +86,19 @@ export const declarationsFiscalesRequester = {
     apiFetch(`/declarations-fiscales/${id}`, { method: "DELETE" }),
 }
 
+// ÉTATS (PDF)
+const baseApiURL = import.meta.env.VITE_BASE_API_URL;
+
+export const etatsRequester = {
+  /** URL de téléchargement du PDF d'un état (un flux, une période). */
+  pdfUrl: (companyId: string, month: number, year: number, flow: string) => {
+    const params = new URLSearchParams({
+      companyId,
+      month: String(month),
+      year: String(year),
+      flow,
+    });
+    return `${baseApiURL}/etats/pdf?${params.toString()}`;
+  },
+};
+
